@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ayurveda Skill Mapping & Internship Portal
 
 **SIH 2026** — Smart India Hackathon project for Ayurveda students (BAMS/MD/PhD).
@@ -211,3 +212,6 @@ See `skills/services.py` for implementation.
 ## License
 
 Built for SIH 2026 — Educational/Hackathon project.
+=======
+
+>>>>>>> abc56e65196705f2f7044fa843360b239e387194
