@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Home - {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<section class="hero-section text-white text-center py-5">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold mb-3">Ayurveda Skill Mapping & Internship Portal</h1>
+        <p class="lead mb-4">Assess your skills, identify gaps, and find the perfect internship match for your Ayurveda career.</p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4">Get Started</a>
+            <a href="{% url 'about' %}" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3">
+                <div class="stat-card p-4">
+                    <i class="fas fa-user-graduate fa-3x text-teal mb-3"></i>
+                    <h3>{{ stats.students|default:"0" }}</h3>
+                    <p class="text-muted">Students Registered</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card p-4">
+                    <i class="fas fa-briefcase fa-3x text-teal mb-3"></i>
+                    <h3>{{ stats.opportunities|default:"0" }}</h3>
+                    <p class="text-muted">Active Opportunities</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card p-4">
+                    <i class="fas fa-building fa-3x text-teal mb-3"></i>
+                    <h3>{{ stats.industries|default:"0" }}</h3>
+                    <p class="text-muted">Industry Partners</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card p-4">
+                    <i class="fas fa-chart-line fa-3x text-teal mb-3"></i>
+                    <h3>AI-Powered</h3>
+                    <p class="text-muted">Skill Matching</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3"><i class="fas fa-clipboard-check fa-2x"></i></div>
+                        <h5>Skill Assessment</h5>
+                        <p class="text-muted">Complete a comprehensive 50-question assessment across 6 Ayurveda skill categories.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3"><i class="fas fa-brain fa-2x"></i></div>
+                        <h5>Gap Analysis</h5>
+                        <p class="text-muted">AI-powered analysis identifies your skill gaps and recommends targeted learning courses.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3"><i class="fas fa-handshake fa-2x"></i></div>
+                        <h5>Smart Matching</h5>
+                        <p class="text-muted">Get matched with internships and jobs based on weighted cosine similarity of your skills.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

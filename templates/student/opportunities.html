@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Opportunities{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Opportunities</h2>
+
+    <form class="row g-3 mb-4" method="get">
+        <div class="col-md-4">
+            <select class="form-select" name="type">
+                <option value="">All Types</option>
+                <option value="Internship">Internship</option>
+                <option value="Job">Job</option>
+                <option value="FDP">FDP</option>
+                <option value="Research">Research</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" class="form-control" name="location" placeholder="Location">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-teal">Filter</button>
+        </div>
+    </form>
+
+    <div class="row g-4">
+        {% for item in opportunities %}
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 opportunity-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-secondary">{{ item.opportunity.type }}</span>
+                        <span class="badge {% if item.match_score >= 70 %}bg-success{% elif item.match_score >= 50 %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ item.match_score }}% Match
+                        </span>
+                    </div>
+                    <h5><a href="{% url 'opportunity_detail' item.opportunity.opportunity_id %}">{{ item.opportunity.title }}</a></h5>
+                    <p class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i>{{ item.opportunity.location }}
+                    {% if item.opportunity.duration %} | {{ item.opportunity.duration }}{% endif %}</p>
+                    <p>{{ item.opportunity.description|truncatewords:25 }}</p>
+                    {% if item.opportunity.stipend_salary %}
+                    <p class="text-teal fw-medium"><i class="fas fa-rupee-sign me-1"></i>{{ item.opportunity.stipend_salary }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12"><p class="text-muted">No opportunities found.</p></div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

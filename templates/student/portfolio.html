@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Portfolio{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Digital Portfolio</h2>
+        <div>
+            <a href="{% url 'public_portfolio' student.portfolio_slug %}" class="btn btn-outline-teal" target="_blank">
+                <i class="fas fa-external-link-alt me-1"></i>Public Link
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4 text-center">
+            <h3>{{ student.name }}</h3>
+            <p class="text-muted">{{ student.course }} | {{ student.college }}</p>
+            {% if student.bio %}<p>{{ student.bio }}</p>{% endif %}
+            {% if student.career_goal %}<p><strong>Career Goal:</strong> {{ student.career_goal }}</p>{% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white"><h5 class="mb-0">Skills</h5></div>
+                <div class="card-body">
+                    {% for name, data in profile.items %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between"><span>{{ name }}</span><span>{{ data.score|floatformat:0 }}%</span></div>
+                        <div class="progress" style="height:8px;"><div class="progress-bar bg-teal" style="width:{{ data.score }}%"></div></div>
+                    </div>
+                    {% empty %}<p class="text-muted">Complete assessment to populate skills.</p>{% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white"><h5 class="mb-0">Internships</h5></div>
+                <div class="card-body">
+                    {% for i in internships %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong>{{ i.application.opportunity.title }}</strong>
+                        <small class="text-muted d-block">{{ i.start_date }} - {{ i.end_date|default:"Present" }} | {{ i.status }}</small>
+                    </div>
+                    {% empty %}<p class="text-muted">No internships yet.</p>{% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

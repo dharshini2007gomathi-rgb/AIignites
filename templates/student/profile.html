@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Profile - Student{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">My Profile</h2>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="name" value="{{ student.name }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ student.email }}" disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">College</label>
+                        <input type="text" class="form-control" name="college" value="{{ student.college }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Course</label>
+                        <select class="form-select" name="course">
+                            <option value="BAMS" {% if student.course == "BAMS" %}selected{% endif %}>BAMS</option>
+                            <option value="MD Ayurveda" {% if student.course == "MD Ayurveda" %}selected{% endif %}>MD Ayurveda</option>
+                            <option value="PhD Ayurveda" {% if student.course == "PhD Ayurveda" %}selected{% endif %}>PhD Ayurveda</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Year</label>
+                        <input type="number" class="form-control" name="year" value="{{ student.year }}" min="1" max="5">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Specialization / Department</label>
+                        <input type="text" class="form-control" name="specialization" value="{{ student.specialization }}" placeholder="e.g. Kayachikitsa, Dravyaguna, Panchakarma">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-bullseye text-teal me-1"></i>Target Ayurvedic Career Path
+                        </label>
+                        <select class="form-select" name="career_path" id="careerPathSelect">
+                            <option value="">-- Select a Career Path --</option>
+                            {% for cp in career_paths %}
+                            <option value="{{ cp.id }}" 
+                                    data-category="{{ cp.career_category }}"
+                                    data-description="{{ cp.description }}"
+                                    {% if student.career_path_id == cp.id %}selected{% endif %}>
+                                {{ cp.name }} ({{ cp.career_category }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div id="careerPathInfo" class="form-text mt-1 text-muted">
+                            {% if student.career_path %}
+                            <span class="badge bg-teal-light text-teal border border-teal-subtle me-1">{{ student.career_path.career_category }}</span>
+                            {{ student.career_path.description }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Specific Career Goal / Aspirations (Optional Notes)</label>
+                        <input type="text" class="form-control" name="career_goal" value="{{ student.career_goal }}" placeholder="e.g. Open an independent Panchakarma wellness center in Pune">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Professional Bio</label>
+                        <textarea class="form-control" name="bio" rows="3" placeholder="Brief summary of your clinical interests, background, and goals...">{{ student.bio }}</textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-teal px-4">
+                    <i class="fas fa-save me-1"></i>Save Profile
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('careerPathSelect')?.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    const info = document.getElementById('careerPathInfo');
+    if (opt && opt.value) {
+        const cat = opt.getAttribute('data-category');
+        const desc = opt.getAttribute('data-description');
+        info.innerHTML = `<span class="badge bg-teal-light text-teal border border-teal-subtle me-1">${cat}</span> ${desc}`;
+    } else {
+        info.innerHTML = '';
+    }
+});
+</script>
+{% endblock %}

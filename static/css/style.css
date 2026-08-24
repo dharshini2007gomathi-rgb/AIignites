@@ -1,0 +1,87 @@
+/* Ayurveda Skill Portal - Green/Teal Theme */
+:root {
+    --teal: #00897b;
+    --teal-dark: #00695c;
+    --teal-light: #4db6ac;
+    --green: #2e7d32;
+    --bg-light: #f5faf9;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-light);
+}
+
+.bg-teal { background-color: var(--teal) !important; }
+.text-teal { color: var(--teal) !important; }
+.btn-teal {
+    background-color: var(--teal);
+    border-color: var(--teal);
+    color: white;
+}
+.btn-teal:hover {
+    background-color: var(--teal-dark);
+    border-color: var(--teal-dark);
+    color: white;
+}
+.btn-outline-teal {
+    color: var(--teal);
+    border-color: var(--teal);
+}
+.btn-outline-teal:hover {
+    background-color: var(--teal);
+    color: white;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 50%, var(--teal-light) 100%);
+    min-height: 400px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+
+.feature-card .feature-icon {
+    width: 60px; height: 60px;
+    background: rgba(0,137,123,0.1);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--teal);
+}
+
+.opportunity-card { transition: transform 0.2s, box-shadow 0.2s; }
+.opportunity-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+/* Application status badges */
+.status-pending { background-color: #ffc107 !important; color: #000; }
+.status-shortlisted { background-color: #17a2b8 !important; }
+.status-interview { background-color: #6f42c1 !important; }
+.status-selected { background-color: #28a745 !important; }
+.status-rejected { background-color: #dc3545 !important; }
+
+.navbar-brand { font-size: 1.2rem; }
+
+.card { border-radius: 12px; }
+
+.progress-bar.bg-teal { background-color: var(--teal) !important; }
+
+.btn-outline-teal.btn-check:checked + .btn-outline-teal,
+.btn-check:checked + .btn-outline-teal {
+    background-color: var(--teal);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .hero-section { min-height: 300px; }
+    .hero-section h1 { font-size: 1.8rem; }
+}

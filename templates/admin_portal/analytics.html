@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Admin Analytics{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Platform Analytics</h2>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white"><h5 class="mb-0">Most Common Skill Gaps</h5></div>
+                <div class="card-body"><canvas id="gapChart" height="300"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white"><h5 class="mb-0">Industry Skill Demand</h5></div>
+                <div class="card-body"><canvas id="demandChart" height="300"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+createBarChart('gapChart', {{ gap_labels|safe }}, {{ gap_values|safe }}, 'Avg Gap');
+createBarChart('demandChart', {{ demand_labels|safe }}, {{ demand_values|safe }}, 'Demand Count');
+</script>
+{% endblock %}

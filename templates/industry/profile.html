@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Industry Profile{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Company Profile</h2>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3"><label class="form-label">Company Name</label><input type="text" class="form-control" name="company_name" value="{{ industry.company_name }}"></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="type">
+                            {% for t in "Hospital,Pharma,Research,Wellness Center,Startup"|make_list %}{% endfor %}
+                            <option value="Hospital" {% if industry.type == "Hospital" %}selected{% endif %}>Hospital</option>
+                            <option value="Pharma" {% if industry.type == "Pharma" %}selected{% endif %}>Pharma</option>
+                            <option value="Research" {% if industry.type == "Research" %}selected{% endif %}>Research</option>
+                            <option value="Wellness Center" {% if industry.type == "Wellness Center" %}selected{% endif %}>Wellness Center</option>
+                            <option value="Startup" {% if industry.type == "Startup" %}selected{% endif %}>Startup</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Location</label><input type="text" class="form-control" name="location" value="{{ industry.location }}"></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Website</label><input type="url" class="form-control" name="website" value="{{ industry.website|default:'' }}"></div>
+                <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4">{{ industry.description }}</textarea></div>
+                <button type="submit" class="btn btn-teal">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

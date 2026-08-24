@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Register - {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow border-0">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4"><i class="fas fa-user-plus text-teal me-2"></i>Create Account</h3>
+                    <form method="post" id="registerForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required minlength="8">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" name="password_confirm" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Register As</label>
+                            <select class="form-select" name="role" id="roleSelect" required>
+                                <option value="STUDENT">Student (BAMS/MD/PhD)</option>
+                                <option value="INDUSTRY">Industry / Hospital</option>
+                                <option value="FACULTY">Faculty</option>
+                            </select>
+                        </div>
+                        <div id="studentFields">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" name="name">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">College</label>
+                                    <input type="text" class="form-control" name="college">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Course</label>
+                                    <select class="form-select" name="course">
+                                        <option value="BAMS">BAMS</option>
+                                        <option value="MD Ayurveda">MD Ayurveda</option>
+                                        <option value="PhD Ayurveda">PhD Ayurveda</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Year</label>
+                                    <input type="number" class="form-control" name="year" min="1" max="5" value="1">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="industryFields" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" class="form-control" name="company_name">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Type</label>
+                                    <select class="form-select" name="company_type">
+                                        <option value="Hospital">Hospital</option>
+                                        <option value="Pharma">Pharma</option>
+                                        <option value="Research">Research</option>
+                                        <option value="Wellness Center">Wellness Center</option>
+                                        <option value="Startup">Startup</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" class="form-control" name="location">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="facultyFields" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" name="name">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">College</label>
+                                    <input type="text" class="form-control" name="college">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Department</label>
+                                    <input type="text" class="form-control" name="department">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Designation</label>
+                                    <input type="text" class="form-control" name="designation">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-teal w-100">Register</button>
+                    </form>
+                    <p class="text-center mt-3 mb-0">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('roleSelect').addEventListener('change', function() {
+    document.getElementById('studentFields').style.display = this.value === 'STUDENT' ? 'block' : 'none';
+    document.getElementById('industryFields').style.display = this.value === 'INDUSTRY' ? 'block' : 'none';
+    document.getElementById('facultyFields').style.display = this.value === 'FACULTY' ? 'block' : 'none';
+});
+</script>
+{% endblock %}

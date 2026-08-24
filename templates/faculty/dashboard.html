@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Faculty Dashboard{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Faculty Dashboard - {{ faculty.name }}</h2>
+    <p class="text-muted">{{ faculty.college }} | {{ faculty.designation }}</p>
+    <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'faculty_post' %}" class="btn btn-teal">Post FDP/Research</a>
+        <a href="{% url 'faculty_analytics' %}" class="btn btn-outline-teal">Student Analytics</a>
+    </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white"><h5 class="mb-0">Posted Opportunities</h5></div>
+        <ul class="list-group list-group-flush">
+            {% for opp in opportunities %}
+            <li class="list-group-item d-flex justify-content-between"><span>{{ opp.title }}</span><span class="badge bg-secondary">{{ opp.type }}</span></li>
+            {% empty %}<li class="list-group-item text-muted">No opportunities posted yet.</li>{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

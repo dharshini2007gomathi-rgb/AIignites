@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Post FDP/Research{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Post FDP / Research Opportunity</h2>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" name="title" required></div>
+                <div class="mb-3">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" name="type"><option value="FDP">FDP</option><option value="Research">Research</option></select>
+                </div>
+                <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4" required></textarea></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Location</label><input type="text" class="form-control" name="location" required></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Duration</label><input type="text" class="form-control" name="duration"></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Eligibility</label><textarea class="form-control" name="eligibility" rows="2"></textarea></div>
+                <button type="submit" class="btn btn-teal">Post</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

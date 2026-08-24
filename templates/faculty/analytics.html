@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Student Analytics{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Student Analytics</h2>
+    <div class="row g-4">
+        <div class="col-md-4"><div class="stat-card p-4 text-center"><h3>{{ total_students }}</h3><p class="text-muted">Total Students</p></div></div>
+        {% for item in course_counts %}
+        <div class="col-md-4"><div class="stat-card p-4 text-center"><h3>{{ item.count }}</h3><p class="text-muted">{{ item.course }}</p></div></div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

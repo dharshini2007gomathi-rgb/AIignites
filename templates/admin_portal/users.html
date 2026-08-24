@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">User Management</h2>
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Verified</th><th>Joined</th></tr></thead>
+                <tbody>
+                {% for p in profiles %}
+                <tr>
+                    <td>{{ p.user.username }}</td><td>{{ p.user.email }}</td>
+                    <td><span class="badge bg-secondary">{{ p.role }}</span></td>
+                    <td>{% if p.email_verified %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}</td>
+                    <td>{{ p.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Manage Opportunities{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between mb-4"><h2>My Opportunities</h2><a href="{% url 'industry_post' %}" class="btn btn-teal">Post New</a></div>
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Title</th><th>Type</th><th>Location</th><th>Posted</th><th>Active</th></tr></thead>
+                <tbody>
+                {% for opp in opportunities %}
+                <tr>
+                    <td>{{ opp.title }}</td><td>{{ opp.type }}</td><td>{{ opp.location }}</td>
+                    <td>{{ opp.posted_date }}</td><td>{% if opp.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                </tr>
+                {% empty %}<tr><td colspan="5" class="text-muted text-center py-4">No opportunities posted.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

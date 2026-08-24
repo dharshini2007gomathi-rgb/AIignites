@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Admin - Opportunities{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">All Opportunities</h2>
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Title</th><th>Type</th><th>Posted By</th><th>Location</th><th>Active</th></tr></thead>
+                <tbody>
+                {% for opp in opportunities %}
+                <tr>
+                    <td>{{ opp.title }}</td><td>{{ opp.type }}</td><td>{{ opp.posted_by }}</td>
+                    <td>{{ opp.location }}</td><td>{% if opp.is_active %}Yes{% else %}No{% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

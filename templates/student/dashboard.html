@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Student{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Welcome, {{ student.name }}!</h2>
+            <p class="text-muted mb-2">{{ student.course }} | Year {{ student.year }} | {{ student.college }}</p>
+            {% if student.career_path %}
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-teal px-3 py-2 fs-6">
+                    <i class="fas fa-bullseye me-1"></i>Target Path: {{ student.career_path.name }}
+                </span>
+                <a href="{% url 'student_profile' %}" class="small text-teal text-decoration-none"><i class="fas fa-edit me-1"></i>Change</a>
+            </div>
+            {% else %}
+            <div class="alert alert-warning py-1 px-3 mb-0 d-inline-block small">
+                <i class="fas fa-exclamation-circle me-1"></i>No career path selected yet. <a href="{% url 'student_profile' %}" class="fw-bold text-dark">Select your Ayurvedic Career Path</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'student_profile' %}" class="btn btn-outline-teal"><i class="fas fa-user-edit me-1"></i>Profile</a>
+            <a href="{% url 'student_assessment' %}" class="btn btn-teal"><i class="fas fa-clipboard-check me-1"></i>Take Assessment</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-chart-radar text-teal me-2"></i>Skill Profile</h5></div>
+                <div class="card-body">
+                    <canvas id="skillRadar" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-star text-teal me-2"></i>Recommended for You</h5></div>
+                <div class="card-body">
+                    {% for rec in recommendations %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <a href="{% url 'opportunity_detail' rec.opportunity.opportunity_id %}">{{ rec.opportunity.title }}</a>
+                            <small class="text-muted d-block">{{ rec.opportunity.location }}</small>
+                        </div>
+                        <span class="badge bg-teal">{{ rec.match_score }}% match</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Complete your skill assessment to get recommendations.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0"><i class="fas fa-file-alt text-teal me-2"></i>Recent Applications</h5>
+                    <a href="{% url 'student_applications' %}">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Opportunity</th><th>Applied</th><th>Status</th></tr></thead>
+                            <tbody>
+                            {% for app in applications %}
+                            <tr>
+                                <td>{{ app.opportunity.title }}</td>
+                                <td>{{ app.applied_date }}</td>
+                                <td><span class="badge status-{{ app.status|lower }}">{{ app.status }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-muted">No applications yet.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+createRadarChart('skillRadar', {{ chart_labels|safe }}, {{ chart_scores|safe }});
+</script>
+{% endblock %}

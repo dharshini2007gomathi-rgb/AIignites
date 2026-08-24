@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Skill Assessment{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-2">Skill Assessment</h2>
+    <p class="text-muted mb-4">Complete this questionnaire to build your skill profile. Rate each question on a scale of 1-5.</p>
+
+    <form method="post" id="assessmentForm">
+        {% csrf_token %}
+        {% for category, questions in grouped.items %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-teal text-white">
+                <h5 class="mb-0">{{ category }} ({{ questions|length }} questions)</h5>
+            </div>
+            <div class="card-body">
+                {% for q in questions %}
+                <div class="mb-4 pb-3 border-bottom">
+                    <p class="fw-medium">{{ forloop.counter }}. {{ q.question_text }}</p>
+                    {% if q.question_type == 'scale' %}
+                    <div class="btn-group" role="group">
+                        {% for i in "12345" %}
+                        <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_{{ i }}" value="{{ i }}" required>
+                        <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_{{ i }}">{{ i }}</label>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted d-block mt-1">1 = Beginner, 5 = Expert</small>
+                    {% elif q.question_type == 'yes_no' %}
+                    <div class="btn-group">
+                        <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_yes" value="yes">
+                        <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_yes">Yes</label>
+                        <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_no" value="no">
+                        <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_no">No</label>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">No assessment questions available. Run seed data command first.</div>
+        {% endfor %}
+
+        {% if grouped %}
+        <button type="submit" class="btn btn-teal btn-lg" id="submitBtn">
+            <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
+            Submit Assessment
+        </button>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('assessmentForm')?.addEventListener('submit', function() {
+    document.getElementById('submitSpinner').classList.remove('d-none');
+    document.getElementById('submitBtn').disabled = true;
+});
+</script>
+{% endblock %}

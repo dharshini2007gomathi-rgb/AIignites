@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Industry Dashboard{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">{{ industry.company_name }}</h2>
+    <div class="row g-4 mb-4">
+        <div class="col-md-4"><div class="stat-card p-4 text-center"><h3>{{ opportunities.count }}</h3><p class="text-muted">Active Opportunities</p></div></div>
+        <div class="col-md-4"><div class="stat-card p-4 text-center"><h3>{{ total_apps }}</h3><p class="text-muted">Total Applications</p></div></div>
+        <div class="col-md-4"><div class="stat-card p-4 text-center"><h3>{% if industry.verified_status %}Verified{% else %}Pending{% endif %}</h3><p class="text-muted">Verification Status</p></div></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between"><h5 class="mb-0">Your Opportunities</h5><a href="{% url 'industry_post' %}" class="btn btn-sm btn-teal">Post New</a></div>
+                <ul class="list-group list-group-flush">
+                    {% for opp in opportunities %}
+                    <li class="list-group-item d-flex justify-content-between"><span>{{ opp.title }}</span><span class="badge bg-secondary">{{ opp.type }}</span></li>
+                    {% empty %}<li class="list-group-item text-muted">No opportunities posted.</li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white"><h5 class="mb-0">Recent Applications</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for app in applications %}
+                    <li class="list-group-item"><strong>{{ app.student.name }}</strong> applied for {{ app.opportunity.title }}<span class="badge status-{{ app.status|lower }} float-end">{{ app.status }}</span></li>
+                    {% empty %}<li class="list-group-item text-muted">No applications yet.</li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

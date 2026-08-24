@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}{{ student.name }} - Portfolio{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1>{{ student.name }}</h1>
+        <p class="lead text-muted">{{ student.course }} | {{ student.college }}</p>
+        {% if student.specialization %}<p>Specialization: {{ student.specialization }}</p>{% endif %}
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% if student.bio %}<p class="text-center mb-4">{{ student.bio }}</p>{% endif %}
+            <h4>Skills</h4>
+            {% for name, data in profile.items %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between"><span>{{ name }}</span><span>{{ data.score|floatformat:0 }}%</span></div>
+                <div class="progress"><div class="progress-bar bg-teal" style="width:{{ data.score }}%"></div></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

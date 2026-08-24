@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Post Opportunity{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Post New Opportunity</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-8 mb-3"><label class="form-label">Title</label><input type="text" class="form-control" name="title" required></div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="type" required>
+                            <option value="Internship">Internship</option>
+                            <option value="Job">Job</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4" required></textarea></div>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">Location</label><input type="text" class="form-control" name="location" required></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Duration</label><input type="text" class="form-control" name="duration" placeholder="e.g. 3 months"></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Stipend/Salary</label><input type="text" class="form-control" name="stipend_salary"></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Eligibility</label><textarea class="form-control" name="eligibility" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label">Deadline</label><input type="date" class="form-control" name="deadline"></div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white"><h5 class="mb-0">Required Skills</h5></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Skill</th><th>Required Score (0-100)</th><th>Weight (0-1)</th></tr></thead>
+                        <tbody>
+                        {% for skill in skills %}
+                        <tr>
+                            <td>{{ skill.skill_name }} <small class="text-muted">({{ skill.category }})</small></td>
+                            <td><input type="number" class="form-control form-control-sm" name="skill_score_{{ skill.skill_id }}" min="0" max="100" step="1"></td>
+                            <td><input type="number" class="form-control form-control-sm" name="skill_weight_{{ skill.skill_id }}" min="0" max="1" step="0.1" value="1.0"></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-teal btn-lg">Post Opportunity</button>
+    </form>
+</div>
+{% endblock %}

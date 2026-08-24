@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+    <div class="row g-4 mb-4">
+        <div class="col-md-2"><div class="stat-card p-3 text-center"><h4>{{ stats.total_students }}</h4><small>Students</small></div></div>
+        <div class="col-md-2"><div class="stat-card p-3 text-center"><h4>{{ stats.total_industries }}</h4><small>Industries</small></div></div>
+        <div class="col-md-2"><div class="stat-card p-3 text-center"><h4>{{ stats.total_opportunities }}</h4><small>Opportunities</small></div></div>
+        <div class="col-md-2"><div class="stat-card p-3 text-center"><h4>{{ stats.total_applications }}</h4><small>Applications</small></div></div>
+        <div class="col-md-2"><div class="stat-card p-3 text-center"><h4>{{ stats.assessments_completed }}</h4><small>Assessments</small></div></div>
+        <div class="col-md-2"><div class="stat-card p-3 text-center"><h4>{{ stats.placements }}</h4><small>Placements</small></div></div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-3"><a href="{% url 'admin_users' %}" class="btn btn-outline-teal w-100 py-3">Manage Users</a></div>
+        <div class="col-md-3"><a href="{% url 'admin_opportunities' %}" class="btn btn-outline-teal w-100 py-3">Opportunities</a></div>
+        <div class="col-md-3"><a href="{% url 'admin_analytics' %}" class="btn btn-outline-teal w-100 py-3">Analytics</a></div>
+        <div class="col-md-3"><a href="/django-admin/" class="btn btn-outline-teal w-100 py-3">Django Admin</a></div>
+    </div>
+</div>
+{% endblock %}
