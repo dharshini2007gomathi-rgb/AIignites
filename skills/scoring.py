@@ -87,17 +87,31 @@ def process_assessment_submission(student, responses):
     # Update student skills by category (average of category question scores)
     for category, scores in category_scores.items():
         avg_score = sum(scores) / len(scores) if scores else 0
+        raw_self_score = Decimal(str(round(avg_score, 2)))
 
         skill, _ = Skill.objects.get_or_create(
             skill_name=category,
             defaults={'category': category, 'description': f'{category} skills from assessment'},
         )
 
-        StudentSkill.objects.update_or_create(
+        ss, created = StudentSkill.objects.get_or_create(
             student=student,
             skill=skill,
-            defaults={'score': Decimal(str(round(avg_score, 2)))},
+            defaults={
+                'score': raw_self_score,
+                'self_assessment_score': raw_self_score,
+                'is_validated': False,
+            }
         )
+        if not created:
+            ss.self_assessment_score = raw_self_score
+            if ss.is_validated and ss.validated_score is not None:
+                # Recalculate combined score: 30% self-assessment + 70% validated
+                combined = (float(ss.self_assessment_score) * 0.30) + (float(ss.validated_score) * 0.70)
+                ss.score = Decimal(str(round(combined, 2)))
+            else:
+                ss.score = raw_self_score
+            ss.save()
 
     logger.info(
         'Processed %d assessment responses for student %s',
@@ -121,6 +135,10 @@ def get_category_profile(student):
     for ss in skills:
         profile[ss.skill.skill_name] = {
             'score': float(ss.score),
+            'self_assessment_score': float(ss.self_assessment_score) if ss.self_assessment_score is not None else float(ss.score),
+            'validated_score': float(ss.validated_score) if ss.validated_score is not None else None,
+            'verified_score': float(ss.score),
+            'is_validated': ss.is_validated,
             'category': ss.skill.category,
             'assessment_date': ss.assessment_date.isoformat(),
         }

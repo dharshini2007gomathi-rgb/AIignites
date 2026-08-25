@@ -69,6 +69,17 @@ body {
 .status-selected { background-color: #28a745 !important; }
 .status-rejected { background-color: #dc3545 !important; }
 
+/* Skill gap status badges */
+.badge-status-strong { background-color: #2e7d32 !important; color: white; }
+.badge-status-on_track, .badge-status-on-track { background-color: #0288d1 !important; color: white; }
+.badge-status-needs_improvement, .badge-status-needs-improvement { background-color: #f57c00 !important; color: white; }
+.badge-status-critical_gap, .badge-status-critical-gap { background-color: #d32f2f !important; color: white; }
+
+/* Priority badges */
+.badge-priority-high { background-color: #ffebee !important; color: #c62828 !important; border: 1px solid #ffcdd2; }
+.badge-priority-medium { background-color: #fff8e1 !important; color: #e65100 !important; border: 1px solid #ffe082; }
+.badge-priority-low { background-color: #e8f5e9 !important; color: #2e7d32 !important; border: 1px solid #c8e6c9; }
+
 .navbar-brand { font-size: 1.2rem; }
 
 .card { border-radius: 12px; }
@@ -85,3 +96,4 @@ body {
     .hero-section { min-height: 300px; }
     .hero-section h1 { font-size: 1.8rem; }
 }
+

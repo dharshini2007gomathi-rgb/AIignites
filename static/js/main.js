@@ -59,6 +59,74 @@ function createBarChart(canvasId, labels, values, label) {
     });
 }
 
+/** Create a grouped bar chart comparing Current Scores vs Required Target Benchmark */
+function createCareerComparisonChart(canvasId, labels, currentScores, requiredScores) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx || !labels || labels.length === 0) return;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Current Score',
+                    data: currentScores,
+                    backgroundColor: 'rgba(0, 137, 123, 0.85)',
+                    borderColor: 'rgba(0, 137, 123, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                },
+                {
+                    label: 'Career Target',
+                    data: requiredScores,
+                    backgroundColor: 'rgba(255, 152, 0, 0.75)',
+                    borderColor: 'rgba(245, 124, 0, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { boxWidth: 14, font: { size: 12 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        callback: function(value) { return value + '%'; }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Proficiency Score (%)',
+                        font: { size: 11 }
+                    }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+
 /** Show toast notification */
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');

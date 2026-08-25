@@ -3,75 +3,247 @@
 {% block content %}
 <div class="container py-4">
     <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 mb-4">
+        <div class="col-lg-8">
+            <!-- Opportunity Info Card -->
+            <div class="card shadow-sm border-0 mb-4 rounded-3">
                 <div class="card-body p-4">
-                    <span class="badge bg-secondary mb-2">{{ opportunity.type }}</span>
-                    <h2>{{ opportunity.title }}</h2>
-                    <p class="text-muted"><i class="fas fa-building me-1"></i>{{ opportunity.posted_by }} |
-                    <i class="fas fa-map-marker-alt ms-2 me-1"></i>{{ opportunity.location }}</p>
-                    <hr>
-                    <h5>Description</h5>
-                    <p>{{ opportunity.description }}</p>
-                    {% if opportunity.eligibility %}
-                    <h5>Eligibility</h5>
-                    <p>{{ opportunity.eligibility }}</p>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <span class="badge bg-secondary px-3 py-1">{{ opportunity.type }}</span>
+                        <div class="d-flex gap-2">
+                            {% if match.is_verified %}
+                            <span class="badge bg-teal-subtle text-teal border border-teal px-3 py-1 fw-bold">
+                                <i class="fas fa-check-circle me-1"></i>Verified Skill Profile Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-light text-muted border px-3 py-1">
+                                <i class="fas fa-info-circle me-1"></i>Self-Reported Profile
+                            </span>
+                            {% endif %}
+
+                            {% if opportunity.data_status == 'VERIFIED' %}
+                            <span class="badge bg-success-subtle text-success border border-success px-3 py-1">
+                                <i class="fas fa-certificate me-1"></i>Verified Listing
+                            </span>
+                            {% elif opportunity.data_status == 'DEMO' %}
+                            <span class="badge bg-info-subtle text-info border border-info px-3 py-1">
+                                <i class="fas fa-flask me-1"></i>Demo Listing
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-1">
+                                <i class="fas fa-clock me-1"></i>Verify Availability
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h2 class="fw-bold text-dark mb-2">{{ opportunity.title }}</h2>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-building text-teal me-1"></i><strong>{{ opportunity.posted_by }}</strong>
+                        <span class="mx-2">•</span>
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ opportunity.location }}
+                        {% if opportunity.state and opportunity.state not in opportunity.location %}, {{ opportunity.state }}{% endif %}
+                    </p>
+
+                    {% if opportunity.data_status != 'VERIFIED' %}
+                    <div class="alert alert-warning-subtle border-warning-subtle small my-3 rounded-3">
+                        <i class="fas fa-info-circle text-warning me-1"></i>
+                        <strong>Advisory Notice:</strong> This opportunity listing is provided as a structured Ayurvedic directory entry. Students are advised to verify active vacancy availability, dates, and application prerequisites with {{ opportunity.posted_by }}.
+                    </div>
                     {% endif %}
-                    {% if opportunity.duration %}<p><strong>Duration:</strong> {{ opportunity.duration }}</p>{% endif %}
-                    {% if opportunity.stipend_salary %}<p><strong>Stipend/Salary:</strong> {{ opportunity.stipend_salary }}</p>{% endif %}
-                    {% if opportunity.deadline %}<p><strong>Deadline:</strong> {{ opportunity.deadline }}</p>{% endif %}
+
+                    <hr>
+                    <h5 class="fw-bold text-dark mb-2">Description</h5>
+                    <p class="text-secondary lh-base">{{ opportunity.description }}</p>
+
+                    {% if opportunity.eligibility %}
+                    <h5 class="fw-bold text-dark mt-4 mb-2">Prerequisites & Eligibility</h5>
+                    <p class="text-secondary">{{ opportunity.eligibility }}</p>
+                    {% endif %}
+
+                    <div class="row g-2 mt-2 pt-2 border-top small">
+                        {% if opportunity.duration %}<div class="col-md-4"><strong><i class="far fa-clock text-teal me-1"></i>Duration:</strong> {{ opportunity.duration }}</div>{% endif %}
+                        {% if opportunity.stipend_salary %}<div class="col-md-4"><strong><i class="fas fa-rupee-sign text-teal me-1"></i>Stipend/Salary:</strong> {{ opportunity.stipend_salary }}</div>{% endif %}
+                        {% if opportunity.deadline %}<div class="col-md-4"><strong><i class="far fa-calendar-alt text-teal me-1"></i>Deadline:</strong> {{ opportunity.deadline }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
 
-            {% if not has_applied %}
-            <div class="card shadow-sm border-0">
+            <!-- Opportunity-Specific Competency & Eligibility Analysis -->
+            <div class="card shadow-sm border-0 mb-4 rounded-3">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-clipboard-check text-teal me-2"></i>Required Competencies & Eligibility Status
+                    </h5>
+                    <span class="badge {% if match.eligibility.is_eligible %}bg-success text-white{% else %}bg-warning text-dark{% endif %} px-3 py-1">
+                        {{ match.eligibility.status_label }}
+                    </span>
+                </div>
                 <div class="card-body p-4">
-                    <h5>Apply Now</h5>
+                    {% if match.eligibility.is_eligible %}
+                    <div class="alert alert-success border-success-subtle d-flex align-items-center gap-2 mb-4 rounded-3">
+                        <i class="fas fa-check-circle fs-4 text-success"></i>
+                        <div>
+                            <strong class="d-block">Eligible for this Opportunity!</strong>
+                            <small>Your current skill scores meet or exceed all required competency benchmarks for this position.</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning border-warning-subtle d-flex align-items-start gap-2 mb-4 rounded-3">
+                        <i class="fas fa-exclamation-triangle fs-4 text-warning mt-1"></i>
+                        <div>
+                            <strong class="d-block">Skill Gaps to Improve Before Applying</strong>
+                            <small>Review the missing competencies below. Mastering the recommended Ayurvedic concepts will significantly boost your selection chances.</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Skill Requirements Table -->
+                    <div class="table-responsive mb-3">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Required Ayurvedic Skill</th>
+                                    <th class="text-center">Your Score</th>
+                                    <th class="text-center">Required Benchmark</th>
+                                    <th class="text-center">Requirement Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in match.matched_skills %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ item.skill_name }}</td>
+                                    <td class="text-center"><span class="fw-bold text-success">{{ item.current_score|floatformat:0 }}%</span></td>
+                                    <td class="text-center"><span class="badge bg-secondary">{{ item.required_score|floatformat:0 }}%</span></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success"><i class="fas fa-check me-1"></i>Benchmark Met</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                                {% for gap in match.skill_gaps %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ gap.skill_name }}</td>
+                                    <td class="text-center"><span class="fw-bold text-danger">{{ gap.current_score|floatformat:0 }}%</span></td>
+                                    <td class="text-center"><span class="badge bg-secondary">{{ gap.required_score|floatformat:0 }}%</span></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger fw-bold">-{{ gap.gap|floatformat:0 }}% Gap</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Recommended Concepts for Missing Skills -->
+                    {% if match.skill_gaps %}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-graduation-cap text-teal me-2"></i>Recommended Concepts to Master for this Role:</h6>
+                        <div class="row g-3">
+                            {% for gap in match.skill_gaps %}
+                            {% if gap.concepts_to_learn %}
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 bg-light-subtle h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fw-bold text-teal small">{{ gap.skill_name }}</span>
+                                        <span class="badge bg-danger text-white small">Gap: {{ gap.gap|floatformat:0 }}%</span>
+                                    </div>
+                                    <ul class="small mb-0 ps-3 text-dark">
+                                        {% for c in gap.concepts_to_learn|slice:":4" %}
+                                        <li class="mb-1">{{ c }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Application Form -->
+            {% if not has_applied %}
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-dark mb-3"><i class="fas fa-paper-plane text-teal me-2"></i>Submit Your Application</h5>
                     <form method="post" action="{% url 'apply_opportunity' opportunity.opportunity_id %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label">Cover Letter</label>
-                            <textarea class="form-control" name="cover_letter" rows="4"></textarea>
+                            <label class="form-label fw-semibold">Statement of Purpose / Cover Letter</label>
+                            <textarea class="form-control" name="cover_letter" rows="4" placeholder="Briefly describe your clinical interest, Ayurvedic training, and why you are interested in this position..."></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Resume (PDF)</label>
+                            <label class="form-label fw-semibold">Resume / BAMS Credentials (PDF)</label>
                             <input type="file" class="form-control" name="resume" accept=".pdf,.doc,.docx">
                         </div>
-                        <button type="submit" class="btn btn-teal">Submit Application</button>
+                        <button type="submit" class="btn btn-teal btn-lg px-4 shadow-sm fw-bold">
+                            <i class="fas fa-check me-1"></i>Submit Application
+                        </button>
                     </form>
                 </div>
             </div>
             {% else %}
-            <div class="alert alert-success">You have already applied to this opportunity.</div>
+            <div class="alert alert-success border-success-subtle rounded-3 p-3">
+                <i class="fas fa-check-circle me-1"></i><strong>Application Submitted:</strong> You have already applied for this opportunity. You can view your submission status under <a href="{% url 'student_applications' %}" class="alert-link">My Applications</a>.
+            </div>
             {% endif %}
         </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-teal text-white"><h5 class="mb-0">Match Analysis</h5></div>
-                <div class="card-body text-center">
-                    <div class="display-4 text-teal fw-bold">{{ match.match_score }}%</div>
-                    <p class="text-muted">Overall Match Score</p>
-                    {% if match.skill_gaps %}
-                    <h6 class="mt-3">Skill Gaps</h6>
-                    {% for gap in match.skill_gaps|slice:":5" %}
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>{{ gap.skill_name }}</span>
-                        <span class="text-danger">-{{ gap.gap|floatformat:0 }}</span>
+        <!-- Sidebar Match Analysis & Recommendations -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 mb-4 rounded-3">
+                <div class="card-header bg-teal text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Skill Match Analysis</h5>
+                        <span class="badge bg-white text-teal px-2 py-1 small fw-bold">Cosine Metric</span>
                     </div>
-                    {% endfor %}
+                </div>
+                <div class="card-body text-center p-4">
+                    <div class="display-4 text-teal fw-bold mb-1">{{ match.match_score|floatformat:0 }}%</div>
+                    <p class="text-muted small mb-2">Mathematical Fit Score</p>
+                    
+                    <div class="d-inline-block px-3 py-1 rounded-pill small fw-semibold {% if match.is_verified %}bg-success-subtle text-success border border-success{% else %}bg-light text-muted border{% endif %} mb-3">
+                        <i class="fas {% if match.is_verified %}fa-shield-alt text-success{% else %}fa-user-edit text-muted{% endif %} me-1"></i>
+                        {{ match.match_type_label }}
+                    </div>
+
+                    {% if not match.is_verified %}
+                    <div class="p-2 bg-light rounded text-start small mb-3">
+                        <i class="fas fa-info-circle text-teal me-1"></i>
+                        <span>Boost your profile credibility by taking the <a href="{% url 'student_start_concept_test' %}" class="fw-bold text-teal">Concept Validation Test</a>.</span>
+                    </div>
+                    {% endif %}
+
+                    {% if match.skill_gaps %}
+                    <div class="text-start mt-3 pt-3 border-top">
+                        <span class="small fw-bold text-dark d-block mb-2">Priority Competency Gaps:</span>
+                        {% for gap in match.skill_gaps|slice:":4" %}
+                        <div class="d-flex justify-content-between align-items-center small mb-2 p-2 bg-light rounded">
+                            <span class="fw-medium text-dark">{{ gap.skill_name }}</span>
+                            <span class="badge bg-danger-subtle text-danger border border-danger">-{{ gap.gap|floatformat:0 }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
             </div>
 
             {% if courses %}
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white"><h6 class="mb-0">Recommended Courses</h6></div>
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-graduation-cap text-teal me-2"></i>Recommended Bridge Courses</h6>
+                </div>
                 <ul class="list-group list-group-flush">
                     {% for course in courses %}
-                    <li class="list-group-item">
-                        <a href="{{ course.link }}" target="_blank">{{ course.course_name }}</a>
-                        <small class="text-muted d-block">{{ course.provider }} | {{ course.level }}</small>
+                    <li class="list-group-item p-3">
+                        <a href="{{ course.link }}" target="_blank" class="fw-bold text-decoration-none text-dark d-block mb-1">
+                            {{ course.course_name }}
+                        </a>
+                        <div class="d-flex justify-content-between align-items-center small text-muted">
+                            <span>{{ course.provider }}</span>
+                            <span class="badge bg-light text-dark border">{{ course.level }}</span>
+                        </div>
                     </li>
                     {% endfor %}
                 </ul>

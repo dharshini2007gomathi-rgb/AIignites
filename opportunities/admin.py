@@ -20,6 +20,8 @@ class OpportunitySkillInline(admin.TabularInline):
 
 @admin.register(Opportunity)
 class OpportunityAdmin(admin.ModelAdmin):
-    list_display = ['title', 'type', 'location', 'is_active', 'posted_date']
-    list_filter = ['type', 'is_active']
+    list_display = ['title', 'type', 'location', 'state', 'data_status', 'is_active', 'posted_date']
+    list_filter = ['type', 'state', 'data_status', 'is_active']
+    search_fields = ['title', 'location', 'state', 'description', 'eligibility']
     inlines = [OpportunitySkillInline]
+

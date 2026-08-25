@@ -54,6 +54,21 @@ class Student(models.Model):
             self.portfolio_slug = self.student_id.lower()
         super().save(*args, **kwargs)
 
+    @property
+    def is_skill_validated(self):
+        """Check if student has completed a concept validation test."""
+        return self.skills.filter(is_validated=True).exists() or self.validation_attempts.filter(status='COMPLETED').exists()
+
+    @property
+    def validation_status(self):
+        """Return standardized skill profile status."""
+        return 'VALIDATED' if self.is_skill_validated else 'SELF_REPORTED'
+
+    @property
+    def latest_validation_attempt(self):
+        """Return the latest completed concept validation attempt."""
+        return self.validation_attempts.filter(status='COMPLETED').order_by('-submitted_at', '-id').first()
+
 
 class Certification(models.Model):
     """Student certifications for portfolio."""

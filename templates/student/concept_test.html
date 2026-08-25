@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% block title %}Concept Validation Test - {{ attempt.career_path.name }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <!-- Test Header -->
+    <div class="card shadow-sm border-0 mb-4 bg-teal text-white rounded-3">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-white text-teal fw-bold px-3 py-1 shadow-sm">Attempt #{{ attempt.attempt_number }}</span>
+                        <span class="badge bg-dark bg-opacity-25">{{ attempt.career_path.career_category }}</span>
+                        <span class="badge bg-success bg-opacity-75"><i class="fas fa-shield-alt me-1"></i>Role-Specific Test</span>
+                    </div>
+                    <h2 class="h3 fw-bold mb-1">{{ attempt.career_path.name }} - Concept Validation Test</h2>
+                    <p class="mb-0 text-white-50 small">
+                        Objective domain evaluation benchmarked against career path requirements. Answer all questions to verify your Ayurvedic competency profile.
+                    </p>
+                </div>
+                <div class="text-md-end bg-white bg-opacity-10 p-3 rounded-3 border border-white border-opacity-25 shadow-sm">
+                    <span class="small d-block text-white-50 text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Total Questions</span>
+                    <h3 class="fw-bold mb-0 text-white">{{ answers|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation & Progress Palette Bar -->
+    <div class="card shadow-sm border-0 mb-4 rounded-3">
+        <div class="card-body p-3">
+            <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-dark small text-uppercase"><i class="fas fa-tasks text-teal me-1"></i>Progress:</span>
+                        <span class="badge bg-teal px-2 py-1" id="progressCount">0 / {{ answers|length }} Answered</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 8px;">
+                        <div class="progress-bar bg-teal progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Question Palette -->
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center justify-content-md-end flex-wrap gap-1" id="questionPalette">
+                        <span class="small text-muted me-2 d-none d-lg-inline">Questions:</span>
+                        {% for a in answers %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary palette-btn rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                                style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 600;" 
+                                data-target="qcard_{{ a.question.question_id }}" id="pal_{{ a.question.question_id }}">
+                            {{ forloop.counter }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Form -->
+    <form method="post" id="conceptTestForm">
+        {% csrf_token %}
+
+        {% for a in answers %}
+        {% with q=a.question %}
+        <div class="card shadow-sm border-0 mb-4 question-card rounded-3" id="qcard_{{ q.question_id }}" data-index="{{ forloop.counter }}">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark px-3 py-1 rounded-pill">Question {{ forloop.counter }} of {{ answers|length }}</span>
+                    <span class="badge bg-light text-teal border border-teal-subtle fw-semibold px-2 py-1">
+                        <i class="fas fa-book-medical me-1"></i>{{ q.skill.skill_name }}
+                    </span>
+                    {% if q.question_type == 'case_study' %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info px-2 py-1 small">
+                        <i class="fas fa-stethoscope me-1"></i>Clinical Case Scenario
+                    </span>
+                    {% else %}
+                    <span class="badge bg-light text-muted border px-2 py-1 small">Standard MCQ</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge {% if q.difficulty == 'Easy' %}bg-success-subtle text-success border border-success{% elif q.difficulty == 'Medium' %}bg-warning-subtle text-warning-emphasis border border-warning{% else %}bg-danger-subtle text-danger border border-danger{% endif %} small">
+                        {{ q.difficulty }}
+                    </span>
+                    <span class="badge bg-light text-dark border small fw-bold">{{ q.marks }} Mark{% if q.marks > 1 %}s{% endif %}</span>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if q.case_context %}
+                <div class="alert alert-light border-start border-teal border-4 py-3 px-3 mb-3 bg-light rounded-3 shadow-none">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="fas fa-notes-medical text-teal"></i>
+                        <span class="fw-bold text-teal text-uppercase small" style="letter-spacing: 0.5px;">Clinical Vignette / Case Background:</span>
+                    </div>
+                    <p class="small mb-0 text-dark ps-3">{{ q.case_context }}</p>
+                </div>
+                {% endif %}
+
+                <p class="fs-6 fw-bold text-dark mb-4 lh-base">{{ q.question_text }}</p>
+
+                <!-- Options Grid -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="option-label p-3 border rounded-3 d-flex align-items-start gap-3 w-100 cursor-pointer h-100" for="opt_{{ q.question_id }}_A">
+                            <input type="radio" class="form-check-input mt-1 test-option" name="q_{{ q.question_id }}" id="opt_{{ q.question_id }}_A" value="A" {% if a.selected_option == 'A' %}checked{% endif %}>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span class="badge bg-secondary text-white px-2 py-1 rounded">A</span>
+                                    <span class="small text-dark fw-medium">{{ q.option_a }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="option-label p-3 border rounded-3 d-flex align-items-start gap-3 w-100 cursor-pointer h-100" for="opt_{{ q.question_id }}_B">
+                            <input type="radio" class="form-check-input mt-1 test-option" name="q_{{ q.question_id }}" id="opt_{{ q.question_id }}_B" value="B" {% if a.selected_option == 'B' %}checked{% endif %}>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span class="badge bg-secondary text-white px-2 py-1 rounded">B</span>
+                                    <span class="small text-dark fw-medium">{{ q.option_b }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="option-label p-3 border rounded-3 d-flex align-items-start gap-3 w-100 cursor-pointer h-100" for="opt_{{ q.question_id }}_C">
+                            <input type="radio" class="form-check-input mt-1 test-option" name="q_{{ q.question_id }}" id="opt_{{ q.question_id }}_C" value="C" {% if a.selected_option == 'C' %}checked{% endif %}>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span class="badge bg-secondary text-white px-2 py-1 rounded">C</span>
+                                    <span class="small text-dark fw-medium">{{ q.option_c }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="option-label p-3 border rounded-3 d-flex align-items-start gap-3 w-100 cursor-pointer h-100" for="opt_{{ q.question_id }}_D">
+                            <input type="radio" class="form-check-input mt-1 test-option" name="q_{{ q.question_id }}" id="opt_{{ q.question_id }}_D" value="D" {% if a.selected_option == 'D' %}checked{% endif %}>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span class="badge bg-secondary text-white px-2 py-1 rounded">D</span>
+                                    <span class="small text-dark fw-medium">{{ q.option_d }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Card Nav Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                    {% if not forloop.first %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary prev-q-btn" data-prev="qcard_{{ prev_qid }}">
+                        <i class="fas fa-chevron-left me-1"></i>Previous
+                    </button>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+
+                    {% if not forloop.last %}
+                    <button type="button" class="btn btn-sm btn-outline-teal next-q-btn">
+                        Next Question<i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                    {% else %}
+                    <span class="badge bg-success-subtle text-success border border-success small"><i class="fas fa-flag-checkered me-1"></i>Final Question</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+
+        <!-- Bottom Action Bar -->
+        <div class="card shadow border-0 sticky-bottom bg-white mb-4 rounded-3">
+            <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-info-circle text-teal"></i>
+                    <span class="text-muted small">Once submitted, answers are graded deterministically and your verified skill profile will be updated.</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'student_assessment' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Save & Return Later
+                    </a>
+                    <button type="submit" class="btn btn-teal btn-lg px-4 shadow-sm fw-bold" id="submitTestBtn">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="testSubmitSpinner"></span>
+                        <i class="fas fa-check-double me-1"></i>Submit Assessment for Verification
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.cursor-pointer {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.option-label {
+    background-color: #ffffff;
+    transition: all 0.2s ease-in-out;
+}
+.option-label:hover {
+    background-color: #f8fafc;
+    border-color: #0d9488 !important;
+    transform: translateY(-1px);
+}
+.option-label:has(input:checked) {
+    background-color: #f0fdfa !important;
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.25);
+}
+.palette-btn.answered {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+    border-color: #0d9488 !important;
+}
+.palette-btn.active {
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.4);
+}
+.btn-outline-teal {
+    color: #0d9488;
+    border-color: #0d9488;
+}
+.btn-outline-teal:hover {
+    background-color: #0d9488;
+    color: #ffffff;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const totalQuestions = {{ answers|length }};
+    const radioInputs = document.querySelectorAll('.test-option');
+    const progressCount = document.getElementById('progressCount');
+    const progressBar = document.getElementById('progressBar');
+    const questionCards = document.querySelectorAll('.question-card');
+
+    function updateProgress() {
+        const answeredMap = {};
+        radioInputs.forEach(input => {
+            if (input.checked) {
+                const card = input.closest('.question-card');
+                if (card) {
+                    const qid = card.id.replace('qcard_', '');
+                    answeredMap[qid] = true;
+                }
+            }
+        });
+
+        const count = Object.keys(answeredMap).length;
+        const pct = Math.round((count / totalQuestions) * 100);
+
+        if (progressCount) progressCount.innerText = `${count} / ${totalQuestions} Answered`;
+        if (progressBar) {
+            progressBar.style.width = `${pct}%`;
+            progressBar.setAttribute('aria-valuenow', pct);
+        }
+
+        // Update palette buttons
+        document.querySelectorAll('.palette-btn').forEach(btn => {
+            const targetId = btn.getAttribute('data-target');
+            const qid = targetId.replace('qcard_', '');
+            if (answeredMap[qid]) {
+                btn.classList.add('answered');
+                btn.classList.remove('btn-outline-secondary');
+            } else {
+                btn.classList.remove('answered');
+                btn.classList.add('btn-outline-secondary');
+            }
+        });
+    }
+
+    // Question Palette direct jump
+    document.querySelectorAll('.palette-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetElem = document.getElementById(targetId);
+            if (targetElem) {
+                targetElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetElem.classList.add('border-teal');
+                setTimeout(() => targetElem.classList.remove('border-teal'), 1500);
+            }
+        });
+    });
+
+    // Next / Previous buttons within question cards
+    questionCards.forEach((card, idx) => {
+        const nextBtn = card.querySelector('.next-q-btn');
+        if (nextBtn && idx + 1 < questionCards.length) {
+            nextBtn.addEventListener('click', function() {
+                questionCards[idx + 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+
+        const prevBtn = card.querySelector('.prev-q-btn');
+        if (prevBtn && idx > 0) {
+            prevBtn.addEventListener('click', function() {
+                questionCards[idx - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+    });
+
+    radioInputs.forEach(input => {
+        input.addEventListener('change', updateProgress);
+    });
+
+    updateProgress();
+
+    // Form submission confirmation and duplicate prevention
+    const form = document.getElementById('conceptTestForm');
+    form?.addEventListener('submit', function(e) {
+        const answeredCount = Object.keys(
+            Array.from(radioInputs).reduce((acc, input) => {
+                if (input.checked) acc[input.name] = true;
+                return acc;
+            }, {})
+        ).length;
+
+        if (answeredCount < totalQuestions) {
+            const unanswered = totalQuestions - answeredCount;
+            if (!confirm(`You have answered ${answeredCount} of ${totalQuestions} questions (${unanswered} remaining unanswered).\n\nAre you sure you want to submit your test now?`)) {
+                e.preventDefault();
+                return;
+            }
+        }
+
+        const submitBtn = document.getElementById('submitTestBtn');
+        const spinner = document.getElementById('testSubmitSpinner');
+        if (submitBtn) submitBtn.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

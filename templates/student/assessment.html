@@ -1,52 +1,260 @@
 {% extends 'base.html' %}
-{% block title %}Skill Assessment{% endblock %}
+{% block title %}Skill Assessment & Concept Validation{% endblock %}
 {% block content %}
 <div class="container py-4">
-    <h2 class="mb-2">Skill Assessment</h2>
-    <p class="text-muted mb-4">Complete this questionnaire to build your skill profile. Rate each question on a scale of 1-5.</p>
-
-    <form method="post" id="assessmentForm">
-        {% csrf_token %}
-        {% for category, questions in grouped.items %}
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-teal text-white">
-                <h5 class="mb-0">{{ category }} ({{ questions|length }} questions)</h5>
+    <!-- Header with 4-step workflow -->
+    <div class="mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <h2 class="mb-1 fw-bold text-dark"><i class="fas fa-clipboard-check text-teal me-2"></i>Ayurvedic Skill Assessment & Validation</h2>
+                <p class="text-muted mb-0">Two-layer competency assessment: Self-Reported Questionnaire + Career-Path Objective Concept Validation Test.</p>
             </div>
-            <div class="card-body">
-                {% for q in questions %}
-                <div class="mb-4 pb-3 border-bottom">
-                    <p class="fw-medium">{{ forloop.counter }}. {{ q.question_text }}</p>
-                    {% if q.question_type == 'scale' %}
-                    <div class="btn-group" role="group">
-                        {% for i in "12345" %}
-                        <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_{{ i }}" value="{{ i }}" required>
-                        <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_{{ i }}">{{ i }}</label>
-                        {% endfor %}
-                    </div>
-                    <small class="text-muted d-block mt-1">1 = Beginner, 5 = Expert</small>
-                    {% elif q.question_type == 'yes_no' %}
-                    <div class="btn-group">
-                        <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_yes" value="yes">
-                        <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_yes">Yes</label>
-                        <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_no" value="no">
-                        <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_no">No</label>
-                    </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
+            <div>
+                {% if student.is_skill_validated %}
+                <span class="badge bg-success px-3 py-2 fs-6 shadow-sm">
+                    <i class="fas fa-check-circle me-1"></i>Skill Profile: VALIDATED
+                </span>
+                {% else %}
+                <span class="badge bg-warning text-dark px-3 py-2 fs-6 shadow-sm">
+                    <i class="fas fa-exclamation-circle me-1"></i>Skill Profile: SELF-REPORTED (Not Yet Validated)
+                </span>
+                {% endif %}
             </div>
         </div>
-        {% empty %}
-        <div class="alert alert-info">No assessment questions available. Run seed data command first.</div>
-        {% endfor %}
 
-        {% if grouped %}
-        <button type="submit" class="btn btn-teal btn-lg" id="submitBtn">
-            <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
-            Submit Assessment
-        </button>
-        {% endif %}
-    </form>
+        <!-- 4-Step Flow Indicator -->
+        <div class="row g-2 mt-3">
+            <div class="col-6 col-md-3">
+                <div class="p-2 border rounded-3 text-center bg-white shadow-sm h-100">
+                    <span class="badge bg-teal rounded-pill mb-1">Step 1</span>
+                    <h6 class="small mb-0 fw-bold">Self-Assessment</h6>
+                    <small class="text-muted" style="font-size: 0.72rem;">Rate your abilities (1-5)</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-2 border rounded-3 text-center bg-white shadow-sm h-100">
+                    <span class="badge {% if student.career_path %}bg-teal{% else %}bg-secondary{% endif %} rounded-pill mb-1">Step 2</span>
+                    <h6 class="small mb-0 fw-bold">Career Path Target</h6>
+                    <small class="text-muted" style="font-size: 0.72rem;">
+                        {% if student.career_path %}{{ student.career_path.name|truncatechars:20 }}{% else %}Select target path{% endif %}
+                    </small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-2 border rounded-3 text-center bg-white shadow-sm h-100">
+                    <span class="badge {% if student.is_skill_validated %}bg-success{% elif student.career_path %}bg-warning text-dark{% else %}bg-secondary{% endif %} rounded-pill mb-1">Step 3</span>
+                    <h6 class="small mb-0 fw-bold">Concept Validation</h6>
+                    <small class="text-muted" style="font-size: 0.72rem;">Objective domain test</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-2 border rounded-3 text-center bg-white shadow-sm h-100">
+                    <span class="badge {% if student.is_skill_validated %}bg-success{% else %}bg-secondary{% endif %} rounded-pill mb-1">Step 4</span>
+                    <h6 class="small mb-0 fw-bold">Verified Profile</h6>
+                    <small class="text-muted" style="font-size: 0.72rem;">70% Test + 30% Self</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="assessmentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="validation-tab" data-bs-toggle="pill" data-bs-target="#validation-content" type="button" role="tab">
+                <i class="fas fa-vial me-2"></i>Career-Path Concept Validation Test
+                {% if student.is_skill_validated %}
+                <span class="badge bg-success ms-1">Validated</span>
+                {% elif active_in_progress_attempt %}
+                <span class="badge bg-warning text-dark ms-1">In Progress</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="self-tab" data-bs-toggle="pill" data-bs-target="#self-content" type="button" role="tab">
+                <i class="fas fa-sliders-h me-2"></i>Self-Assessment Questionnaire (50 Questions)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="assessmentTabContent">
+        <!-- TAB 1: Concept Validation Test -->
+        <div class="tab-pane fade show active" id="validation-content" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-graduation-cap text-teal me-2"></i>Domain Validation Layer</h5>
+                            <span class="badge bg-light text-muted border px-2 py-1 small">Objective Evaluation</span>
+                        </div>
+                        <div class="card-body p-4">
+                            {% if student.career_path %}
+                            <div class="p-3 bg-light rounded-3 border mb-4">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                    <span class="small text-muted text-uppercase fw-bold">Current Target Career Path</span>
+                                    <span class="badge bg-teal">{{ student.career_path.career_category }}</span>
+                                </div>
+                                <h4 class="fw-bold text-teal mb-1">{{ student.career_path.name }}</h4>
+                                <p class="small text-muted mb-0">{{ student.career_path.description }}</p>
+                            </div>
+
+                            <div class="alert alert-info py-3 px-3 mb-4">
+                                <h6 class="fw-bold mb-1"><i class="fas fa-info-circle me-1"></i>About the Concept Validation Test</h6>
+                                <p class="small mb-2">
+                                    This objective test generates questions calibrated to the high-priority competencies of <strong>{{ student.career_path.name }}</strong>. 
+                                    Your answers validate your real domain knowledge and combine with your self-reported ratings using the formula:
+                                </p>
+                                <div class="bg-white p-2 rounded border small text-center fw-semibold text-dark">
+                                    Final Verified Skill Score = (Self-Assessment × 30%) + (Concept Test × 70%)
+                                </div>
+                            </div>
+
+                            {% if active_in_progress_attempt %}
+                            <div class="alert alert-warning border-warning d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                                <div>
+                                    <strong class="d-block"><i class="fas fa-clock me-1"></i>Attempt #{{ active_in_progress_attempt.attempt_number }} in progress!</strong>
+                                    <small class="text-muted">Started {{ active_in_progress_attempt.started_at|timesince }} ago</small>
+                                </div>
+                                <a href="{% url 'student_take_concept_test' attempt_id=active_in_progress_attempt.id %}" class="btn btn-warning btn-sm fw-bold">
+                                    <i class="fas fa-play me-1"></i>Resume Test
+                                </a>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex gap-3 flex-wrap align-items-center">
+                                <a href="{% url 'student_start_concept_test' %}" class="btn btn-teal btn-lg px-4 shadow-sm">
+                                    <i class="fas fa-play-circle me-2"></i>{% if validation_attempts %}Retake Concept Validation Test{% else %}Start Concept Validation Test{% endif %}
+                                </a>
+                                <a href="{% url 'student_profile' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-exchange-alt me-1"></i>Change Career Path
+                                </a>
+                            </div>
+
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3 text-warning">
+                                    <i class="fas fa-exclamation-triangle fa-3x"></i>
+                                </div>
+                                <h5 class="fw-bold">Target Career Path Not Selected</h5>
+                                <p class="text-muted small mb-3">
+                                    The Concept Validation Test is customized to the specific competencies required by your chosen Ayurvedic career path. Please select your career path first.
+                                </p>
+                                <a href="{% url 'student_profile' %}" class="btn btn-teal px-4">
+                                    <i class="fas fa-bullseye me-2"></i>Select Career Path in Profile
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attempt History Column -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-history text-teal me-2"></i>Attempt History</h5>
+                            <span class="badge bg-light text-dark border">{{ validation_attempts|length }} Total</span>
+                        </div>
+                        <div class="card-body p-3">
+                            {% if validation_attempts %}
+                            <div class="list-group list-group-flush">
+                                {% for att in validation_attempts %}
+                                <div class="list-group-item px-2 py-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span class="badge bg-teal">Attempt #{{ att.attempt_number }}</span>
+                                            {% if att.is_latest and att.status == 'COMPLETED' %}
+                                            <span class="badge bg-success small">Latest</span>
+                                            {% endif %}
+                                            {% if att.status == 'IN_PROGRESS' %}
+                                            <span class="badge bg-warning text-dark small">In Progress</span>
+                                            {% endif %}
+                                        </div>
+                                        <h6 class="mb-0 small fw-bold text-dark">{{ att.career_path.name }}</h6>
+                                        <small class="text-muted" style="font-size: 0.75rem;">{{ att.started_at|date:"d M Y, h:i A" }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if att.status == 'COMPLETED' %}
+                                        <h5 class="mb-1 fw-bold text-teal">{{ att.percentage|floatformat:1 }}%</h5>
+                                        <a href="{% url 'student_concept_test_result' attempt_id=att.id %}" class="btn btn-sm btn-outline-teal py-0 px-2 small">
+                                            View Report
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'student_take_concept_test' attempt_id=att.id %}" class="btn btn-sm btn-warning py-1 px-2 small">
+                                            Resume
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-clipboard-list fa-2x mb-2 text-muted opacity-50"></i>
+                                <p class="small mb-0">No validation attempts recorded yet. Start your first attempt to verify your skill profile.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Self-Assessment Questionnaire (Preserved 100%) -->
+        <div class="tab-pane fade" id="self-content" role="tabpanel">
+            <div class="card shadow-sm border-0 mb-4 bg-light">
+                <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-info-circle text-teal me-2"></i>Self-Reported Skill Ratings</h6>
+                        <small class="text-muted">Rate your confidence from 1 (Beginner) to 5 (Expert) across core Ayurvedic competencies.</small>
+                    </div>
+                    <span class="badge bg-secondary px-3 py-2">Layer 1: Self-Assessment</span>
+                </div>
+            </div>
+
+            <form method="post" id="assessmentForm">
+                {% csrf_token %}
+                {% for category, questions in grouped.items %}
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-teal text-white">
+                        <h5 class="mb-0">{{ category }} ({{ questions|length }} questions)</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for q in questions %}
+                        <div class="mb-4 pb-3 border-bottom">
+                            <p class="fw-medium">{{ forloop.counter }}. {{ q.question_text }}</p>
+                            {% if q.question_type == 'scale' %}
+                            <div class="btn-group" role="group">
+                                {% for i in "12345" %}
+                                <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_{{ i }}" value="{{ i }}" required>
+                                <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_{{ i }}">{{ i }}</label>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted d-block mt-1">1 = Beginner, 5 = Expert</small>
+                            {% elif q.question_type == 'yes_no' %}
+                            <div class="btn-group">
+                                <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_yes" value="yes">
+                                <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_yes">Yes</label>
+                                <input type="radio" class="btn-check" name="q_{{ q.assessment_id }}" id="q{{ q.assessment_id }}_no" value="no">
+                                <label class="btn btn-outline-teal" for="q{{ q.assessment_id }}_no">No</label>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-info">No assessment questions available. Run seed data command first.</div>
+                {% endfor %}
+
+                {% if grouped %}
+                <button type="submit" class="btn btn-teal btn-lg px-4" id="submitBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
+                    <i class="fas fa-save me-1"></i>Save Self-Assessment
+                </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block extra_js %}
@@ -57,3 +265,4 @@ document.getElementById('assessmentForm')?.addEventListener('submit', function()
 });
 </script>
 {% endblock %}
+

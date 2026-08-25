@@ -4,8 +4,10 @@ Handles all role-based dashboard and page rendering.
 """
 import json
 import logging
+from django.db import models
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -18,7 +20,10 @@ from accounts.serializers import RegisterSerializer
 from students.models import Student
 from skills.models import Assessment, Skill, CareerPath
 from skills.scoring import process_assessment_submission, get_category_profile
-from skills.services import get_recommended_opportunities, calculate_match_score, get_skill_gap_analysis, get_recommended_courses
+from skills.services import (
+    get_recommended_opportunities, calculate_match_score, get_skill_gap_analysis,
+    get_recommended_courses, get_career_skill_gap_analysis,
+)
 from opportunities.models import Opportunity, Industry
 from applications.models import Application, Internship
 from courses.models import Course
@@ -123,18 +128,33 @@ def student_dashboard(request):
     profile = get_category_profile(student)
     applications = student.applications.select_related('opportunity').order_by('-applied_date')[:5]
     recommendations = get_recommended_opportunities(student, limit=5)
+    career_gap = get_career_skill_gap_analysis(student)
 
     # Prepare radar chart data (top 6 categories)
     chart_labels = list(profile.keys())[:6]
     chart_scores = [profile[k]['score'] for k in chart_labels]
+
+    # Prepare Career Benchmark comparison chart data
+    comparison_labels = []
+    comparison_current_scores = []
+    comparison_required_scores = []
+    if career_gap.get('has_career_path') and career_gap.get('skill_comparisons'):
+        for comp in career_gap['skill_comparisons']:
+            comparison_labels.append(comp['skill_name'])
+            comparison_current_scores.append(comp['current_score'])
+            comparison_required_scores.append(comp['required_score'])
 
     context = {
         'student': student,
         'profile': profile,
         'applications': applications,
         'recommendations': recommendations,
+        'career_gap': career_gap,
         'chart_labels': json.dumps(chart_labels),
         'chart_scores': json.dumps(chart_scores),
+        'comparison_labels': json.dumps(comparison_labels),
+        'comparison_current_scores': json.dumps(comparison_current_scores),
+        'comparison_required_scores': json.dumps(comparison_required_scores),
     }
     return render(request, 'student/dashboard.html', context)
 
@@ -173,13 +193,30 @@ def student_profile(request):
     })
 
 
+from skills.models import (
+    Assessment, Skill, CareerPath,
+    ConceptValidationAttempt, ConceptValidationAnswer, ValidationQuestion,
+)
+from skills.concept_test_engine import (
+    generate_validation_test, evaluate_validation_attempt, get_attempt_result_summary,
+)
+
+
 @role_required('STUDENT')
 def student_assessment(request):
+    student = request.user.student
     assessments = Assessment.objects.select_related('skill').order_by('category', 'assessment_id')
     categories = assessments.values_list('category', flat=True).distinct()
     grouped = {}
     for a in assessments:
         grouped.setdefault(a.category, []).append(a)
+
+    validation_attempts = ConceptValidationAttempt.objects.filter(
+        student=student
+    ).select_related('career_path').order_by('-started_at')
+
+    active_in_progress_attempt = validation_attempts.filter(status='IN_PROGRESS').first()
+    latest_completed_attempt = validation_attempts.filter(status='COMPLETED').first()
 
     if request.method == 'POST':
         responses = []
@@ -188,12 +225,82 @@ def student_assessment(request):
                 assessment_id = int(key.replace('q_', ''))
                 responses.append({'assessment_id': assessment_id, 'answer': value})
         if responses:
-            result = process_assessment_submission(request.user.student, responses)
-            messages.success(request, f'Assessment completed! {result["responses_saved"]} responses saved.')
-            return redirect('student_skills')
+            result = process_assessment_submission(student, responses)
+            messages.success(request, f'Self-Assessment completed! {result["responses_saved"]} responses saved.')
+            return redirect('student_assessment')
         messages.error(request, 'Please answer at least one question.')
 
-    return render(request, 'student/assessment.html', {'grouped': grouped, 'categories': categories})
+    return render(request, 'student/assessment.html', {
+        'student': student,
+        'grouped': grouped,
+        'categories': categories,
+        'validation_attempts': validation_attempts,
+        'active_in_progress_attempt': active_in_progress_attempt,
+        'latest_completed_attempt': latest_completed_attempt,
+    })
+
+
+@role_required('STUDENT')
+def student_start_concept_test(request):
+    student = request.user.student
+    if not student.career_path:
+        messages.warning(request, 'Please select your target Career Path in your profile before starting the Concept Validation Test.')
+        return redirect('student_profile')
+
+    try:
+        attempt, questions = generate_validation_test(student)
+        messages.info(request, f'Started Concept Validation Test #{attempt.attempt_number} for {student.career_path.name}.')
+        return redirect('student_take_concept_test', attempt_id=attempt.id)
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect('student_assessment')
+
+
+@role_required('STUDENT')
+def student_take_concept_test(request, attempt_id):
+    student = request.user.student
+    attempt = get_object_or_404(ConceptValidationAttempt, id=attempt_id, student=student)
+
+    if attempt.status == 'COMPLETED':
+        return redirect('student_concept_test_result', attempt_id=attempt.id)
+
+    answers = attempt.answers.select_related('question__skill').all()
+
+    if request.method == 'POST':
+        submission_dict = {}
+        for key, value in request.POST.items():
+            if key.startswith('q_'):
+                qid = key.replace('q_', '')
+                submission_dict[qid] = value
+
+        if not submission_dict:
+            messages.error(request, 'Please answer the questions before submitting.')
+        else:
+            result = evaluate_validation_attempt(attempt, submission_dict)
+            messages.success(request, f'Concept Validation Test completed! Score: {result["percentage"]}%. Your Skill Profile has been verified.')
+            return redirect('student_concept_test_result', attempt_id=attempt.id)
+
+    return render(request, 'student/concept_test.html', {
+        'student': student,
+        'attempt': attempt,
+        'answers': answers,
+    })
+
+
+@role_required('STUDENT')
+def student_concept_test_result(request, attempt_id):
+    student = request.user.student
+    attempt = get_object_or_404(ConceptValidationAttempt, id=attempt_id, student=student)
+    result = get_attempt_result_summary(attempt)
+    career_gap = get_career_skill_gap_analysis(student)
+
+    return render(request, 'student/concept_test_result.html', {
+        'student': student,
+        'attempt': attempt,
+        'result': result,
+        'career_gap': career_gap,
+        'learning_path': career_gap.get('learning_path'),
+    })
 
 
 @role_required('STUDENT')
@@ -201,42 +308,127 @@ def student_skills(request):
     student = request.user.student
     profile = get_category_profile(student)
     gaps = get_skill_gap_analysis(student)
+    career_gap = get_career_skill_gap_analysis(student)
 
     labels = list(profile.keys())
     scores = [profile[k]['score'] for k in labels]
     gap_labels = [g['skill_name'] for g in gaps[:6]]
     gap_values = [g['gap'] for g in gaps[:6]]
 
+    # Prepare Career Benchmark comparison chart data
+    comparison_labels = []
+    comparison_current_scores = []
+    comparison_required_scores = []
+    if career_gap.get('has_career_path') and career_gap.get('skill_comparisons'):
+        for comp in career_gap['skill_comparisons']:
+            comparison_labels.append(comp['skill_name'])
+            comparison_current_scores.append(comp['current_score'])
+            comparison_required_scores.append(comp['required_score'])
+
     context = {
+        'student': student,
         'profile': profile,
         'gaps': gaps,
+        'career_gap': career_gap,
         'chart_labels': json.dumps(labels),
         'chart_scores': json.dumps(scores),
         'gap_labels': json.dumps(gap_labels),
         'gap_values': json.dumps(gap_values),
+        'comparison_labels': json.dumps(comparison_labels),
+        'comparison_current_scores': json.dumps(comparison_current_scores),
+        'comparison_required_scores': json.dumps(comparison_required_scores),
     }
     return render(request, 'student/skills.html', context)
+
 
 
 @role_required('STUDENT')
 def student_opportunities(request):
     student = request.user.student
-    opp_type = request.GET.get('type', '')
-    location = request.GET.get('location', '')
+    opp_type = request.GET.get('type', '').strip()
+    state = request.GET.get('state', '').strip()
+    location = request.GET.get('location', '').strip()
+    data_status = request.GET.get('data_status', '').strip()
+    skill_filter = request.GET.get('skill', '').strip()
 
-    opportunities = Opportunity.objects.filter(is_active=True).prefetch_related('required_skills__skill')
+    opportunities = Opportunity.objects.filter(is_active=True).prefetch_related(
+        'required_skills__skill', 'industry', 'faculty'
+    )
+
     if opp_type:
         opportunities = opportunities.filter(type=opp_type)
+    if state:
+        opportunities = opportunities.filter(
+            models.Q(state__iexact=state) | models.Q(location__icontains=state)
+        )
     if location:
-        opportunities = opportunities.filter(location__icontains=location)
+        opportunities = opportunities.filter(
+            models.Q(location__icontains=location) | models.Q(title__icontains=location) | models.Q(description__icontains=location)
+        )
+    if data_status:
+        opportunities = opportunities.filter(data_status=data_status)
+    if skill_filter:
+        opportunities = opportunities.filter(required_skills__skill__skill_name__icontains=skill_filter).distinct()
+
+    # Check target career path for relevance ranking bonus
+    target_skill_ids = set()
+    if student.career_path:
+        target_skill_ids = set(
+            student.career_path.skill_requirements.values_list('skill_id', flat=True)
+        )
 
     opp_list = []
     for opp in opportunities:
         match = calculate_match_score(student, opp)
-        opp_list.append({'opportunity': opp, 'match_score': match['match_score'], 'gaps': match['skill_gaps']})
 
-    opp_list.sort(key=lambda x: x['match_score'], reverse=True)
-    return render(request, 'student/opportunities.html', {'opportunities': opp_list})
+        # Career alignment relevance bonus for ranking order only
+        opp_req_skill_ids = set(opp.required_skills.values_list('skill_id', flat=True))
+        overlap_count = len(target_skill_ids.intersection(opp_req_skill_ids)) if target_skill_ids else 0
+        career_bonus = min(overlap_count * 2.0, 10.0) if target_skill_ids else 0.0
+        ranking_score = min(100.0, match['match_score'] + career_bonus)
+
+        opp_list.append({
+            'opportunity': opp,
+            'match_score': match['match_score'],  # Exact cosine similarity match percentage
+            'ranking_score': ranking_score,
+            'career_bonus': career_bonus,
+            'is_career_relevant': overlap_count > 0,
+            'gaps': match['skill_gaps'],
+            'matched_skills': match.get('matched_skills', []),
+            'is_verified': match.get('is_verified', False),
+            'match_type': match.get('match_type', 'SELF_REPORTED'),
+            'match_type_label': match.get('match_type_label', 'Self-Assessment Based Match'),
+            'eligibility': match.get('eligibility'),
+        })
+
+    # Sort primarily by ranking score, then by pure match score
+    opp_list.sort(key=lambda x: (x['ranking_score'], x['match_score']), reverse=True)
+
+    # Dynamic sorted state list from database and common Indian states
+    indian_states = [
+        'Andhra Pradesh', 'Assam', 'Chhattisgarh', 'Delhi', 'Goa', 'Gujarat', 'Haryana',
+        'Himachal Pradesh', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Odisha',
+        'Puducherry', 'Rajasthan', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+    ]
+    db_states = list(Opportunity.objects.filter(is_active=True).exclude(state='').values_list('state', flat=True).distinct())
+    combined_states = sorted(list(set(indian_states + [s for s in db_states if s])))
+
+    available_types = Opportunity.TYPE_CHOICES
+
+    context = {
+        'opportunities': opp_list,
+        'selected_type': opp_type,
+        'selected_state': state,
+        'selected_location': location,
+        'selected_status': data_status,
+        'selected_skill': skill_filter,
+        'available_states': combined_states,
+        'available_types': available_types,
+        'total_count': len(opp_list),
+        'has_active_filters': bool(opp_type or state or location or data_status or skill_filter),
+    }
+    return render(request, 'student/opportunities.html', context)
+
 
 
 @role_required('STUDENT')

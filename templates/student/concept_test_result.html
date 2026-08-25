@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% block title %}Concept Validation Result - {{ attempt.career_path.name }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <!-- Header Breadcrumb & Quick Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <a href="{% url 'student_assessment' %}" class="text-muted small text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i>Back to Assessments & Tests
+            </a>
+            <h2 class="h3 fw-bold text-dark mb-0 mt-1">Concept Validation Result & Learning Path</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'student_start_concept_test' %}" class="btn btn-outline-teal btn-sm shadow-sm">
+                <i class="fas fa-redo me-1"></i>Retake Concept Test
+            </a>
+            <a href="{% url 'student_skills' %}" class="btn btn-teal btn-sm shadow-sm">
+                <i class="fas fa-chart-line me-1"></i>View Full Skill Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Score Card -->
+    <div class="card shadow-sm border-0 mb-4 bg-teal text-white rounded-3">
+        <div class="card-body p-4">
+            <div class="row align-items-center g-4">
+                <div class="col-md-7">
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                        <span class="badge bg-white text-teal fw-bold px-3 py-1 shadow-sm">Attempt #{{ result.attempt_number }}</span>
+                        <span class="badge bg-success shadow-sm"><i class="fas fa-check-circle me-1"></i>VERIFIED SKILL PROFILE</span>
+                        <span class="badge bg-dark bg-opacity-25">{{ result.career_path.category }}</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ result.career_path.name }}</h3>
+                    <p class="text-white-50 small mb-3">
+                        Completed on {{ attempt.submitted_at|date:"d M Y, h:i A" }} | Deterministic Role-Specific Auto-Evaluation
+                    </p>
+                    <div class="p-3 bg-white bg-opacity-10 rounded-3 border border-white border-opacity-25 small">
+                        <i class="fas fa-calculator me-1 text-warning"></i>
+                        <span class="text-white fw-medium">Verification Formula Applied:</span>
+                        <div class="mt-1 fw-bold text-white">
+                            Verified Skill Score = (Self-Assessment Score × 30%) + (Concept Test Score × 70%)
+                        </div>
+                        <span class="text-white-50 small mt-1 d-block">
+                            Raw self-reported scores and objective concept test marks are preserved individually.
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-5 text-md-end">
+                    <div class="d-inline-block bg-white text-dark p-4 rounded-3 shadow text-center" style="min-width: 220px;">
+                        <span class="text-muted small text-uppercase fw-bold d-block mb-1" style="letter-spacing: 0.5px;">Concept Test Score</span>
+                        <h1 class="display-4 fw-bold text-teal mb-0">{{ result.percentage|floatformat:1 }}%</h1>
+                        <span class="badge {% if result.percentage >= 70 %}bg-success{% elif result.percentage >= 50 %}bg-teal{% else %}bg-warning text-dark{% endif %} px-3 py-1 mt-2">
+                            {{ result.total_score|floatformat:1 }} / {{ result.max_score|floatformat:1 }} Marks
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Career Readiness Benchmark Card -->
+    {% if career_gap.has_career_path %}
+    <div class="card shadow-sm border-0 mb-4 border-start border-success border-4 rounded-3">
+        <div class="card-body p-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-success-subtle text-success border border-success px-2 py-1 small fw-bold">
+                            <i class="fas fa-award me-1"></i>Verified Career Readiness
+                        </span>
+                        <span class="badge bg-light text-muted border small">{{ career_gap.total_requirements }} Required Competencies</span>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">
+                        {{ career_gap.career_readiness_score|floatformat:0 }}% Readiness Index 
+                        <span class="fs-6 fw-normal text-muted">({{ career_gap.readiness_label|title }})</span>
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Based on your verified skill scores benchmarked against industry standards for <strong>{{ career_gap.career_path.name }}</strong>.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{% url 'student_opportunities' %}" class="btn btn-teal px-3 shadow-sm">
+                        <i class="fas fa-briefcase me-1"></i>View Matching Opportunities
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Skill-by-Skill Verified Scores vs Benchmark Table -->
+    <div class="card shadow-sm border-0 mb-4 rounded-3">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-table text-teal me-2"></i>Verified Skill Profile & Career Gap Analysis</h5>
+                <small class="text-muted">Direct comparison of Self-Reported, Concept Test, Final Verified, and Benchmark scores</small>
+            </div>
+            <span class="badge bg-light text-teal border border-teal-subtle px-3 py-1">Role: {{ result.career_path.name }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Ayurvedic Skill</th>
+                            <th class="text-center">Self Score (30%)</th>
+                            <th class="text-center">Concept Score (70%)</th>
+                            <th class="text-center">Final Verified Score</th>
+                            <th class="text-center">Career Benchmark</th>
+                            <th class="text-center">Skill Gap</th>
+                            <th class="text-center">Priority</th>
+                            <th class="text-center pe-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if career_gap.skill_comparisons %}
+                        {% for item in career_gap.skill_comparisons %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark d-block">{{ item.skill_name }}</span>
+                                <small class="text-muted">{{ item.category }}</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">{{ item.self_assessment_score|floatformat:0 }}%</span>
+                            </td>
+                            <td class="text-center">
+                                {% if item.validated_score is not None %}
+                                <span class="badge bg-teal-subtle text-teal fw-bold border border-teal-subtle">{{ item.validated_score|floatformat:0 }}%</span>
+                                {% else %}
+                                <span class="badge bg-light text-muted border">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <span class="fw-bold text-dark fs-6">{{ item.verified_score|floatformat:1 }}%</span>
+                                    {% if item.is_validated %}
+                                    <i class="fas fa-check-circle text-success small" title="Verified via Concept Test"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary text-white">{{ item.required_score|floatformat:0 }}%</span>
+                            </td>
+                            <td class="text-center">
+                                {% if item.skill_gap > 0 %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger fw-bold">-{{ item.skill_gap|floatformat:0 }}%</span>
+                                {% else %}
+                                <span class="badge bg-success-subtle text-success border border-success"><i class="fas fa-check me-1"></i>Met</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge {% if item.priority_level == 'High' %}bg-danger{% elif item.priority_level == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ item.priority_level }}
+                                </span>
+                            </td>
+                            <td class="text-center pe-4">
+                                {% if item.skill_status == 'STRONG' %}
+                                <span class="badge bg-success text-white">Strong</span>
+                                {% elif item.skill_status == 'ON_TRACK' %}
+                                <span class="badge bg-info text-dark">On Track</span>
+                                {% elif item.skill_status == 'NEEDS_IMPROVEMENT' %}
+                                <span class="badge bg-warning text-dark">Needs Improvement</span>
+                                {% else %}
+                                <span class="badge bg-danger text-white">Critical Gap</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        {% for skill_name, data in result.skill_scores.items %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">{{ skill_name }}</td>
+                            <td class="text-center"><span class="badge bg-light text-muted border">50%</span></td>
+                            <td class="text-center"><span class="badge bg-teal-subtle text-teal fw-bold">{{ data.validated_score|floatformat:0 }}%</span></td>
+                            <td class="text-center"><span class="fw-bold text-dark">{{ data.validated_score|floatformat:1 }}%</span></td>
+                            <td class="text-center"><span class="badge bg-secondary text-white">80%</span></td>
+                            <td class="text-center"><span class="badge bg-light text-dark border">Analyzed</span></td>
+                            <td class="text-center"><span class="badge bg-warning text-dark">Medium</span></td>
+                            <td class="text-center pe-4"><span class="badge bg-info text-dark">Verified</span></td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- YOUR RECOMMENDED LEARNING PATH -->
+    <div class="card shadow-sm border-0 mb-4 rounded-3 border-top border-teal border-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-graduation-cap text-teal me-2"></i>Your Recommended Learning Path & Concept Mastery
+                </h5>
+                <small class="text-muted">Targeted concepts to learn for bridging your identified skill gaps</small>
+            </div>
+            <span class="badge bg-teal text-white px-3 py-1">Personalized Curriculum</span>
+        </div>
+        <div class="card-body p-4">
+            <!-- Prioritized Gaps with Specific Concepts -->
+            {% if learning_path.prioritized_skills %}
+            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-bullseye text-danger me-2"></i>Priority Competencies to Master:</h6>
+            <div class="row g-3 mb-4">
+                {% for skill_rec in learning_path.prioritized_skills %}
+                <div class="col-md-6">
+                    <div class="p-3 border rounded-3 h-100 bg-light-subtle shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">{{ skill_rec.skill_name }}</h6>
+                                <small class="text-muted">{{ skill_rec.category }} | Current: {{ skill_rec.current_score|floatformat:0 }}% vs Req: {{ skill_rec.required_score|floatformat:0 }}%</small>
+                            </div>
+                            <span class="badge {% if skill_rec.priority == 'High' %}bg-danger{% else %}bg-warning text-dark{% endif %} px-2 py-1">
+                                {{ skill_rec.priority }} Priority
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-2"><em>{{ skill_rec.reason }}</em></p>
+                        
+                        <div class="mt-2 pt-2 border-top">
+                            <span class="small fw-bold text-teal d-block mb-1"><i class="fas fa-book me-1"></i>Key Concepts to Learn:</span>
+                            <ul class="small mb-0 ps-3 text-dark">
+                                {% for concept in skill_rec.concepts_to_learn %}
+                                <li class="mb-1">{{ concept }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 4-Step Improvement Roadmap -->
+            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-route text-teal me-2"></i>4-Step Improvement Action Plan:</h6>
+            <div class="row g-3">
+                {% for step in learning_path.roadmap %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 bg-light rounded-3 shadow-none p-3 border-top border-teal border-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-teal text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">{{ step.step }}</span>
+                            <span class="fw-bold text-dark small">{{ step.phase }}</span>
+                        </div>
+                        <h6 class="fw-bold text-teal mb-2 small">{{ step.title }}</h6>
+                        <p class="small text-muted mb-2">{{ step.action }}</p>
+                        <div class="mt-auto pt-2 border-top">
+                            <small class="text-muted d-block"><i class="far fa-clock me-1"></i>{{ step.timeframe }}</small>
+                            <small class="text-dark fw-medium d-block mt-1"><i class="fas fa-bullseye text-teal me-1"></i>{{ step.milestone }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Question-by-Question Review & Rationales -->
+    <div class="card shadow-sm border-0 mb-4 rounded-3">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-book-open text-teal me-2"></i>Detailed Question Review & Classical Rationales</h5>
+                <small class="text-muted">Review questions with revealed correct answers and Ayurvedic classical references</small>
+            </div>
+            <span class="badge bg-light text-dark border">{{ result.review|length }} Questions Evaluated</span>
+        </div>
+        <div class="card-body p-4">
+            {% for item in result.review %}
+            <div class="p-3 border rounded-3 mb-4 {% if item.is_correct %}border-success-subtle bg-success-subtle bg-opacity-10{% else %}border-danger-subtle bg-danger-subtle bg-opacity-10{% endif %}">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-dark">Q{{ forloop.counter }}</span>
+                        <span class="badge bg-teal">{{ item.skill_name }}</span>
+                        {% if item.question_type == 'case_study' %}
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info small"><i class="fas fa-stethoscope me-1"></i>Clinical Case</span>
+                        {% endif %}
+                        <span class="badge bg-light text-muted border small">{{ item.difficulty }}</span>
+                    </div>
+                    <div>
+                        {% if item.is_correct %}
+                        <span class="badge bg-success px-3 py-1"><i class="fas fa-check me-1"></i>Correct (+{{ item.score_obtained|floatformat:1 }} / {{ item.marks|floatformat:1 }} Marks)</span>
+                        {% else %}
+                        <span class="badge bg-danger px-3 py-1"><i class="fas fa-times me-1"></i>Incorrect (0.0 / {{ item.marks|floatformat:1 }} Marks)</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if item.case_context %}
+                <div class="alert alert-light border-start border-teal border-3 py-2 px-3 mb-2 small text-dark bg-white">
+                    <strong>Case Background:</strong> {{ item.case_context }}
+                </div>
+                {% endif %}
+
+                <h6 class="fw-bold text-dark mb-3">{{ item.question_text }}</h6>
+
+                <!-- Options List -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded small {% if item.correct_answer == 'A' %}bg-success-subtle border-success fw-bold text-success{% elif item.selected_option == 'A' and not item.is_correct %}bg-danger-subtle border-danger text-danger{% else %}bg-white{% endif %}">
+                            <span class="badge {% if item.correct_answer == 'A' %}bg-success{% elif item.selected_option == 'A' %}bg-danger{% else %}bg-light text-dark border{% endif %} me-1">A</span>
+                            {{ item.option_a }}
+                            {% if item.selected_option == 'A' %}<span class="badge bg-secondary ms-1">Your Choice</span>{% endif %}
+                            {% if item.correct_answer == 'A' %}<i class="fas fa-check-circle text-success ms-1"></i>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded small {% if item.correct_answer == 'B' %}bg-success-subtle border-success fw-bold text-success{% elif item.selected_option == 'B' and not item.is_correct %}bg-danger-subtle border-danger text-danger{% else %}bg-white{% endif %}">
+                            <span class="badge {% if item.correct_answer == 'B' %}bg-success{% elif item.selected_option == 'B' %}bg-danger{% else %}bg-light text-dark border{% endif %} me-1">B</span>
+                            {{ item.option_b }}
+                            {% if item.selected_option == 'B' %}<span class="badge bg-secondary ms-1">Your Choice</span>{% endif %}
+                            {% if item.correct_answer == 'B' %}<i class="fas fa-check-circle text-success ms-1"></i>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded small {% if item.correct_answer == 'C' %}bg-success-subtle border-success fw-bold text-success{% elif item.selected_option == 'C' and not item.is_correct %}bg-danger-subtle border-danger text-danger{% else %}bg-white{% endif %}">
+                            <span class="badge {% if item.correct_answer == 'C' %}bg-success{% elif item.selected_option == 'C' %}bg-danger{% else %}bg-light text-dark border{% endif %} me-1">C</span>
+                            {{ item.option_c }}
+                            {% if item.selected_option == 'C' %}<span class="badge bg-secondary ms-1">Your Choice</span>{% endif %}
+                            {% if item.correct_answer == 'C' %}<i class="fas fa-check-circle text-success ms-1"></i>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-2 border rounded small {% if item.correct_answer == 'D' %}bg-success-subtle border-success fw-bold text-success{% elif item.selected_option == 'D' and not item.is_correct %}bg-danger-subtle border-danger text-danger{% else %}bg-white{% endif %}">
+                            <span class="badge {% if item.correct_answer == 'D' %}bg-success{% elif item.selected_option == 'D' %}bg-danger{% else %}bg-light text-dark border{% endif %} me-1">D</span>
+                            {{ item.option_d }}
+                            {% if item.selected_option == 'D' %}<span class="badge bg-secondary ms-1">Your Choice</span>{% endif %}
+                            {% if item.correct_answer == 'D' %}<i class="fas fa-check-circle text-success ms-1"></i>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if item.explanation %}
+                <div class="p-3 bg-white rounded border small">
+                    <strong class="text-teal d-block mb-1"><i class="fas fa-lightbulb text-warning me-1"></i>Ayurvedic / Classical Clinical Rationale:</strong>
+                    <span class="text-dark">{{ item.explanation }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Bottom Action CTA Buttons -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-5">
+        <a href="{% url 'student_assessment' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Assessments
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'student_start_concept_test' %}" class="btn btn-outline-teal">
+                <i class="fas fa-redo me-1"></i>Retake Concept Test
+            </a>
+            <a href="{% url 'student_skills' %}" class="btn btn-teal">
+                <i class="fas fa-chart-line me-1"></i>View Updated Skill Profile
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

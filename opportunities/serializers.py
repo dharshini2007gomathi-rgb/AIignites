@@ -25,13 +25,15 @@ class OpportunitySkillSerializer(serializers.ModelSerializer):
 class OpportunitySerializer(serializers.ModelSerializer):
     required_skills = OpportunitySkillSerializer(many=True, read_only=True)
     posted_by = serializers.CharField(read_only=True)
+    status_label = serializers.CharField(read_only=True)
     match_score = serializers.FloatField(read_only=True, required=False)
 
     class Meta:
         model = Opportunity
         fields = [
             'opportunity_id', 'title', 'type', 'description', 'duration',
-            'location', 'stipend_salary', 'eligibility', 'is_active',
+            'location', 'state', 'data_status', 'status_label',
+            'stipend_salary', 'eligibility', 'is_active',
             'posted_date', 'deadline', 'posted_by', 'required_skills', 'match_score',
         ]
 
@@ -43,8 +45,10 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
         model = Opportunity
         fields = [
             'title', 'type', 'description', 'duration', 'location',
+            'state', 'data_status',
             'stipend_salary', 'eligibility', 'deadline', 'required_skills',
         ]
+
 
     def create(self, validated_data):
         skills_data = validated_data.pop('required_skills', [])

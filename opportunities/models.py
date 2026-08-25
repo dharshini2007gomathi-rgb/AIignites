@@ -55,9 +55,26 @@ class Opportunity(models.Model):
 
     TYPE_CHOICES = [
         ('Internship', 'Internship'),
-        ('Job', 'Job'),
-        ('FDP', 'FDP'),
-        ('Research', 'Research'),
+        ('Job', 'Full-Time Job'),
+        ('Research', 'Research Opportunity'),
+        ('Clinical Training', 'Clinical Training'),
+        ('Industry Training', 'Industry Training'),
+        ('Fellowship', 'Fellowship'),
+        ('Ayurvedic Wellness', 'Ayurvedic Wellness Opportunity'),
+        ('Academic Collaboration', 'Academic / Research Collaboration'),
+        ('FDP', 'Faculty Development Program (FDP)'),
+        ('Pharma R&D', 'Pharmaceutical / R&D Opportunity'),
+        ('Hospital Clinical', 'Hospital / Clinical Opportunity'),
+        ('Hospital Admin', 'Hospital / Healthcare Administration'),
+        ('Medical Content', 'Medical Content & Documentation Opportunity'),
+        ('Public Health', 'Public Health Opportunity'),
+        ('Startup Support', 'Entrepreneurship / Startup Support Opportunity'),
+    ]
+
+    DATA_STATUS_CHOICES = [
+        ('DEMO', 'Demo Opportunity'),
+        ('NEEDS_VERIFICATION', 'Verify Availability'),
+        ('VERIFIED', 'Verified Opportunity'),
     ]
 
     opportunity_id = models.AutoField(primary_key=True)
@@ -70,10 +87,17 @@ class Opportunity(models.Model):
         null=True, blank=True
     )
     title = models.CharField(max_length=300)
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES)
     description = models.TextField()
     duration = models.CharField(max_length=100, blank=True, null=True)
     location = models.CharField(max_length=200)
+    state = models.CharField(max_length=100, blank=True, default='', help_text='State or Region')
+    data_status = models.CharField(
+        max_length=30,
+        choices=DATA_STATUS_CHOICES,
+        default='NEEDS_VERIFICATION',
+        help_text='Indicates data verification status.'
+    )
     stipend_salary = models.CharField(max_length=100, blank=True, null=True)
     eligibility = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -95,6 +119,19 @@ class Opportunity(models.Model):
         if self.faculty:
             return self.faculty.name
         return 'Unknown'
+
+    @property
+    def status_label(self):
+        return dict(self.DATA_STATUS_CHOICES).get(self.data_status, self.data_status)
+
+    @property
+    def status_badge_class(self):
+        if self.data_status == 'VERIFIED':
+            return 'bg-success'
+        elif self.data_status == 'DEMO':
+            return 'bg-info text-dark'
+        return 'bg-warning text-dark'
+
 
 
 class OpportunitySkill(models.Model):

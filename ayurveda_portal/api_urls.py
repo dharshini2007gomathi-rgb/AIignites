@@ -7,6 +7,10 @@ from skills.api_views import (
     SkillListView, SkillDetailView, AssessmentListView,
     AssessmentSubmitView, GapAnalysisView,
     CareerPathListView, CareerPathDetailView,
+    StudentCareerGapAnalysisView,
+    ConceptTestStartView, ConceptTestSubmitView,
+    ConceptTestResultView, ConceptTestHistoryView,
+    ConceptTestStatusView,
 )
 from opportunities.api_views import (
     OpportunityListView, OpportunityDetailView,
@@ -32,16 +36,29 @@ urlpatterns = [
 
     # Students
     path('students/', StudentListView.as_view(), name='api-students'),
+    path('students/me/career-gap/', StudentCareerGapAnalysisView.as_view(), name='api-my-career-gap'),
     path('students/<str:student_id>/', StudentDetailView.as_view(), name='api-student-detail'),
+    path('students/<str:student_id>/career-gap/', StudentCareerGapAnalysisView.as_view(), name='api-student-career-gap'),
     path('students/<str:student_id>/skills/', StudentSkillsView.as_view(), name='api-student-skills'),
     path('students/<str:student_id>/portfolio/', StudentPortfolioView.as_view(), name='api-student-portfolio'),
 
-    # Skills
+    # Skills & Assessments
     path('skills/', SkillListView.as_view(), name='api-skills'),
     path('skills/<int:pk>/', SkillDetailView.as_view(), name='api-skill-detail'),
     path('skills/assess/', AssessmentSubmitView.as_view(), name='api-assess'),
     path('skills/assessments/', AssessmentListView.as_view(), name='api-assessments'),
     path('skills/gap-analysis/<str:student_id>/', GapAnalysisView.as_view(), name='api-gap-analysis'),
+    path('skills/career-gap/<str:student_id>/', StudentCareerGapAnalysisView.as_view(), name='api-career-gap-analysis'),
+
+    # Concept Validation Test (Objective Domain Validation Layer)
+    path('skills/concept-test/start/', ConceptTestStartView.as_view(), name='api-concept-test-start'),
+    path('skills/concept-test/<int:attempt_id>/submit/', ConceptTestSubmitView.as_view(), name='api-concept-test-submit'),
+    path('skills/concept-test/<int:attempt_id>/result/', ConceptTestResultView.as_view(), name='api-concept-test-result'),
+    path('skills/concept-test/history/', ConceptTestHistoryView.as_view(), name='api-concept-test-history'),
+    path('skills/concept-test/status/', ConceptTestStatusView.as_view(), name='api-concept-test-status-me'),
+    path('skills/concept-test/status/<str:student_id>/', ConceptTestStatusView.as_view(), name='api-concept-test-status-student'),
+
+
 
     # Opportunities
     path('opportunities/', OpportunityListView.as_view(), name='api-opportunities'),

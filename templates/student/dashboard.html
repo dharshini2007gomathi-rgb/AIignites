@@ -2,33 +2,285 @@
 {% block title %}Dashboard - Student{% endblock %}
 {% block content %}
 <div class="container py-4">
+    <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div>
-            <h2 class="mb-1">Welcome, {{ student.name }}!</h2>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <h2 class="mb-0">Welcome, {{ student.name }}!</h2>
+                {% if student.is_skill_validated %}
+                <span class="badge bg-success px-3 py-1 small shadow-sm"><i class="fas fa-check-circle me-1"></i>Profile: VALIDATED</span>
+                {% else %}
+                <span class="badge bg-warning text-dark px-3 py-1 small shadow-sm"><i class="fas fa-exclamation-circle me-1"></i>Profile: SELF-REPORTED</span>
+                {% endif %}
+            </div>
             <p class="text-muted mb-2">{{ student.course }} | Year {{ student.year }} | {{ student.college }}</p>
             {% if student.career_path %}
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="badge bg-teal px-3 py-2 fs-6">
                     <i class="fas fa-bullseye me-1"></i>Target Path: {{ student.career_path.name }}
                 </span>
+                <span class="badge bg-light text-dark border px-2 py-1 small">{{ student.career_path.career_category }}</span>
                 <a href="{% url 'student_profile' %}" class="small text-teal text-decoration-none"><i class="fas fa-edit me-1"></i>Change</a>
             </div>
             {% else %}
-            <div class="alert alert-warning py-1 px-3 mb-0 d-inline-block small">
+            <div class="alert alert-warning py-2 px-3 mb-0 d-inline-block small">
                 <i class="fas fa-exclamation-circle me-1"></i>No career path selected yet. <a href="{% url 'student_profile' %}" class="fw-bold text-dark">Select your Ayurvedic Career Path</a>
             </div>
             {% endif %}
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{% url 'student_profile' %}" class="btn btn-outline-teal"><i class="fas fa-user-edit me-1"></i>Profile</a>
-            <a href="{% url 'student_assessment' %}" class="btn btn-teal"><i class="fas fa-clipboard-check me-1"></i>Take Assessment</a>
+            <a href="{% url 'student_assessment' %}" class="btn btn-teal"><i class="fas fa-clipboard-check me-1"></i>Assess & Validate</a>
         </div>
     </div>
 
+    <!-- Career Skill Gap Analysis Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0 text-dark"><i class="fas fa-chart-line text-teal me-2"></i>Career Skill Gap Analysis</h5>
+                {% if career_gap.has_career_path %}
+                <small class="text-muted">Targeting <strong>{{ career_gap.career_path.name }}</strong> ({{ career_gap.career_path.category }})</small>
+                {% endif %}
+            </div>
+            {% if career_gap.has_career_path %}
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge {% if career_gap.readiness_label == 'HIGHLY_READY' %}bg-success{% elif career_gap.readiness_label == 'JOB_READY' %}bg-teal{% elif career_gap.readiness_label == 'DEVELOPING' %}bg-warning text-dark{% else %}bg-secondary{% endif %} px-3 py-2">
+                    <i class="fas fa-award me-1"></i>{% if student.is_skill_validated %}Validated{% else %}Self-Assessed{% endif %} Readiness: {{ career_gap.career_readiness_score|floatformat:0 }}%
+                </span>
+                <a href="{% url 'student_skills' %}" class="btn btn-sm btn-outline-teal">Detailed Analysis</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if career_gap.has_career_path %}
+            <div class="row g-4 mb-4">
+                <!-- Career Readiness Summary Card -->
+                <div class="col-lg-4 col-md-5">
+                    <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small text-uppercase fw-semibold">Career Readiness</span>
+                                <span class="badge {% if career_gap.career_readiness_score >= 85 %}bg-success{% elif career_gap.career_readiness_score >= 70 %}bg-teal{% elif career_gap.career_readiness_score >= 45 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ career_gap.readiness_label }}
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-baseline gap-2 mb-2">
+                                <h1 class="display-5 fw-bold text-teal mb-0">{{ career_gap.career_readiness_score|floatformat:0 }}%</h1>
+                                <span class="text-muted small">readiness index</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar {% if career_gap.career_readiness_score >= 85 %}bg-success{% elif career_gap.career_readiness_score >= 70 %}bg-teal{% elif career_gap.career_readiness_score >= 45 %}bg-warning{% else %}bg-secondary{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ career_gap.career_readiness_score }}%;" 
+                                     aria-valuenow="{{ career_gap.career_readiness_score }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100"></div>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                Based on {{ career_gap.total_requirements }} weighted competency requirements for {{ career_gap.career_path.name }}.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-top mt-3 d-flex justify-content-around text-center">
+                            <div>
+                                <h6 class="mb-0 text-success fw-bold">{{ career_gap.strengths_count }}</h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">Met / Strong</small>
+                            </div>
+                            <div class="border-start"></div>
+                            <div>
+                                <h6 class="mb-0 text-danger fw-bold">{{ career_gap.gaps_count }}</h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">Skills to Improve</small>
+                            </div>
+                            <div class="border-start"></div>
+                            <div>
+                                <h6 class="mb-0 text-teal fw-bold">{{ career_gap.total_requirements }}</h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">Total Benchmarks</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Career Benchmark Comparison Chart -->
+                <div class="col-lg-8 col-md-7">
+                    <div class="p-3 border rounded-3 h-100 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small text-uppercase fw-semibold"><i class="fas fa-sliders-h me-1"></i>Current Scores vs Career Target</span>
+                            <span class="small text-muted">0-100 Scale</span>
+                        </div>
+                        <div style="position: relative; height: 200px;">
+                            <canvas id="careerComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Priority Gaps & Strengths Grid -->
+            <div class="row g-4 mb-4">
+                <!-- Top Priority Skills to Improve -->
+                <div class="col-md-7">
+                    <div class="border rounded-3 p-3 h-100">
+                        <h6 class="fw-bold mb-3 text-dark d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Top Priority Skills to Improve
+                        </h6>
+                        {% if career_gap.prioritized_gaps %}
+                        <div class="list-group list-group-flush">
+                            {% for gap in career_gap.prioritized_gaps|slice:":4" %}
+                            <div class="list-group-item px-0 py-2 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div>
+                                        <span class="fw-semibold text-dark">{{ gap.skill_name }}</span>
+                                        <span class="badge badge-priority-{{ gap.priority_level|lower }} ms-2 px-2 py-0" style="font-size: 0.75rem;">{{ gap.priority_level }} Priority</span>
+                                        <span class="badge badge-status-{{ gap.skill_status|lower }} ms-1 px-2 py-0" style="font-size: 0.75rem;">{{ gap.skill_status|title }}</span>
+                                    </div>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">
+                                        Gap: {{ gap.skill_gap|floatformat:0 }}%
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
+                                    <span>Current: <strong>{{ gap.current_score|floatformat:0 }}%</strong></span>
+                                    <span>Required: <strong>{{ gap.required_score|floatformat:0 }}%</strong></span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-teal" style="width: {{ gap.achievement_percentage }}%;"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-success">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p class="mb-0 fw-semibold">Congratulations! You meet all competency benchmarks for this path.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Strengths / Met Requirements -->
+                <div class="col-md-5">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <h6 class="fw-bold mb-3 text-dark d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>Met Requirements & Strengths
+                        </h6>
+                        {% if career_gap.strengths %}
+                        <div class="d-flex flex-column gap-2">
+                            {% for str in career_gap.strengths %}
+                            <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-semibold text-dark"><i class="fas fa-check text-success me-2"></i>{{ str.skill_name }}</span>
+                                    <small class="d-block text-muted ps-4" style="font-size: 0.75rem;">Target: {{ str.required_score|floatformat:0 }}%</small>
+                                </div>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold">
+                                    {{ str.current_score|floatformat:0 }}%
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-0">Complete more assessments or improve your scores to achieve benchmark proficiency.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Concept Validation Banner -->
+            {% if not student.is_skill_validated and student.career_path %}
+            <div class="alert alert-warning-subtle border-warning-subtle d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 rounded-3 p-3">
+                <div>
+                    <strong class="d-block text-dark"><i class="fas fa-shield-alt text-warning me-1"></i>Verify Your Skill Profile</strong>
+                    <small class="text-muted">Take the <strong>{{ student.career_path.name }}</strong> Concept Validation Test to convert self-assessment ratings into verified credentials.</small>
+                </div>
+                <a href="{% url 'student_start_concept_test' %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
+                    <i class="fas fa-play-circle me-1"></i>Start Concept Test
+                </a>
+            </div>
+            {% elif student.is_skill_validated and student.career_path %}
+            <div class="alert alert-success-subtle border-success-subtle d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 rounded-3 p-3">
+                <div>
+                    <strong class="d-block text-success"><i class="fas fa-check-circle me-1"></i>Skill Profile Verified</strong>
+                    <small class="text-muted">Your competencies are verified via role-specific concept testing (70% Test + 30% Self).</small>
+                </div>
+                <a href="{% url 'student_start_concept_test' %}" class="btn btn-outline-success btn-sm fw-bold">
+                    <i class="fas fa-redo me-1"></i>Retake Test
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Skill Benchmark Comparison Table -->
+            <div class="border rounded-3">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-table text-teal me-2"></i>Complete Competency Comparison Table</h6>
+                    <small class="text-muted">{{ career_gap.total_requirements }} Competencies Benchmarked</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Skill</th>
+                                <th>Category</th>
+                                <th>Current Score</th>
+                                <th>Required Score</th>
+                                <th>Skill Gap</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comp in career_gap.skill_comparisons %}
+                            <tr>
+                                <td class="fw-semibold">{{ comp.skill_name }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ comp.category }}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2" style="min-width: 120px;">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar bg-teal" style="width: {{ comp.current_score }}%;"></div>
+                                        </div>
+                                        <span class="small fw-bold">{{ comp.current_score|floatformat:0 }}%</span>
+                                    </div>
+                                </td>
+                                <td><span class="fw-semibold">{{ comp.required_score|floatformat:0 }}%</span></td>
+                                <td>
+                                    {% if comp.skill_gap == 0 %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>0 (Met)</span>
+                                    {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold">{{ comp.skill_gap|floatformat:0 }}%</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-status-{{ comp.skill_status|lower }}">{{ comp.skill_status|title }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-priority-{{ comp.priority_level|lower }}">{{ comp.priority_level }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <!-- No Career Path Selected State -->
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-compass fa-3x text-teal"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Personalized Career Skill Gap Analysis</h5>
+                <p class="text-muted mx-auto mb-4" style="max-width: 550px;">
+                    Select your target career path to see your personalized skill gap analysis, benchmark your self-assessment scores against required competencies, and receive prioritized recommendations.
+                </p>
+                <a href="{% url 'student_profile' %}" class="btn btn-teal px-4 py-2">
+                    <i class="fas fa-bullseye me-2"></i>Select Your Career Path in Profile
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- Preserved Existing Dashboard Cards -->
     <div class="row g-4">
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-chart-radar text-teal me-2"></i>Skill Profile</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-chart-pie text-teal me-2"></i>Overall Skill Profile</h5></div>
                 <div class="card-body">
                     <canvas id="skillRadar" height="250"></canvas>
                 </div>
@@ -36,13 +288,13 @@
         </div>
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-star text-teal me-2"></i>Recommended for You</h5></div>
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-star text-teal me-2"></i>Recommended Opportunities</h5></div>
                 <div class="card-body">
                     {% for rec in recommendations %}
                     <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                         <div>
-                            <a href="{% url 'opportunity_detail' rec.opportunity.opportunity_id %}">{{ rec.opportunity.title }}</a>
-                            <small class="text-muted d-block">{{ rec.opportunity.location }}</small>
+                            <a href="{% url 'opportunity_detail' rec.opportunity.opportunity_id %}" class="fw-semibold text-decoration-none text-dark">{{ rec.opportunity.title }}</a>
+                            <small class="text-muted d-block">{{ rec.opportunity.location }} &bull; {{ rec.opportunity.type }}</small>
                         </div>
                         <span class="badge bg-teal">{{ rec.match_score }}% match</span>
                     </div>
@@ -54,9 +306,9 @@
         </div>
         <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-file-alt text-teal me-2"></i>Recent Applications</h5>
-                    <a href="{% url 'student_applications' %}">View All</a>
+                    <a href="{% url 'student_applications' %}" class="small text-teal text-decoration-none">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -84,5 +336,14 @@
 {% block extra_js %}
 <script>
 createRadarChart('skillRadar', {{ chart_labels|safe }}, {{ chart_scores|safe }});
+{% if career_gap.has_career_path %}
+createCareerComparisonChart(
+    'careerComparisonChart',
+    {{ comparison_labels|safe }},
+    {{ comparison_current_scores|safe }},
+    {{ comparison_required_scores|safe }}
+);
+{% endif %}
 </script>
 {% endblock %}
+

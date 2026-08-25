@@ -1,4 +1,5 @@
 """REST API views for opportunities."""
+from django.db import models
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,10 +14,24 @@ from students.models import Student
 
 
 class OpportunityListView(generics.ListCreateAPIView):
-    queryset = Opportunity.objects.filter(is_active=True)
+    queryset = Opportunity.objects.filter(is_active=True).prefetch_related('required_skills__skill')
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['type', 'location']
+    filterset_fields = ['type', 'state', 'location', 'data_status']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        city = self.request.query_params.get('city')
+        if city:
+            qs = qs.filter(location__icontains=city)
+        state_param = self.request.query_params.get('state')
+        if state_param:
+            qs = qs.filter(models.Q(state__icontains=state_param) | models.Q(location__icontains=state_param))
+        skill_param = self.request.query_params.get('skill')
+        if skill_param:
+            qs = qs.filter(required_skills__skill__skill_name__icontains=skill_param).distinct()
+        return qs
+
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
